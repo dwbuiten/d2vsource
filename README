@@ -1,0 +1,66 @@
+D2V Source for VapourSynth (Example)
+------------------------------------
+
+As the title says, this is a D2V parser and decoder for VapourSynth.
+There's not much else to say, so let's get right to an example:
+
+    import vapoursynth as vs
+
+    core = vs.Core()
+
+    core.std.LoadPlugin(path=r'C:\path\to\d2vsource.dll')
+
+    ret = core.d2v.Source(input=r'C:\path\to\my.d2v')
+
+    last = ret
+
+There's not much else to it!
+
+
+Known Limitations & Bugs
+------------------------
+
+* Has decode / frame-accuracy issues on files that start with leading B frames.
+  These are very easy to detect given the flags in the D2V file, but I am
+  unsure how to handle this using libavcodec, or if it is even possible.
+* No build system right now.
+* Only works with D2V files created by DGIndex (version flag 16).
+* Not all the IDCT algorithms in DGDecode are in libavcodec, so I've tried to
+  map them as best I could. See idct_algo_conv in d2v.hpp for more info.
+* Does not support user specified cropping. Would be easy to add, but I disagree
+  with the premise. Use VapourSynth's cropping.
+* Doesn't decode the very last frame in the stream. This will be fixed in
+  the future.
+* There is no native way to create D2V files on Linux or OS X right now. I hope
+  to tackle this at some point. Use WINE for now.
+* It currently dumps errors to stdout, and that should be changed to either
+  stderr or to properly use VapourSynth's error throwing stuff. Currently only
+  minimal errors are supported inside the VapourSynth wrapper.
+* Currently has to copy over the decoded picture to VapourSynth's buffers.
+  Should be moved to use a custom get_buffer for libavcodec at some point.
+* Needs the full path to the D2V file.
+* Probably more I'm forgetting!
+
+
+How to Build
+------------
+
+At some point I will add a proper build system.
+
+On Windows (Visual Studio):
+
+    This assumes that you have the proper dependency paths in %INCLUDE% and %LIB%,
+    and that you have built FFmpeg with Visual Studio as well.
+
+    cl /c /O2 /MT /EHsc /Icore core/d2v.cpp core/compat.cpp core/decode.cpp vs/d2vsource.cpp
+    link /dll /out:d2vsource.dll d2vsource.obj d2v.obj compat.obj decode.obj libavutil.a libavformat.a libavcodec.a advapi32.lib ws2_32.lib
+
+On Linux:
+
+    g++ -fPIC -Wl,-Bsymbolic -shared -o d2vsource.so -D__STDC_CONSTANT_MACROS \
+        -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE \
+        `pkg-config --cflags libavformat libavcodec` \
+        -Icore core/*.cpp vs/*.cpp \
+        `pkg-config --libs --static libavformat libavcodec`
+
+It is untested on Mac OS X.
