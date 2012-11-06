@@ -46,15 +46,16 @@ static void VS_CC d2vInit(VSMap *in, VSMap *out, void **instanceData, VSNode *no
 static const VSFrameRef *VS_CC d2vGetFrame(int n, int activationReason, void **instanceData, void **frameData, VSFrameContext *frameCtx, VSCore *core, const VSAPI *vsapi) {
     d2vData *d = (d2vData *) * instanceData;
     VSFrameRef *f;
+    string msg;
     int stride;
     int p, i, ret, w, h;
     uint8_t *sptr, *dptr;
 
     f = vsapi->newVideoFrame(d->vi.format, d->vi.width, d->vi.height, NULL, core);
 
-    ret = decodeframe(n, d->d2v, d->dec, d->frame);
+    ret = decodeframe(n, d->d2v, d->dec, d->frame, msg);
     if (ret < 0) {
-        vsapi->setFilterError("Cannot decode frame.", frameCtx);
+        vsapi->setFilterError(msg.c_str(), frameCtx);
         return NULL;
     }
 
@@ -91,11 +92,12 @@ static void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore 
     d2vData d;
     d2vData *data;
     const VSNodeRef *cref;
+    string msg;
     int err;
 
-    d.d2v = d2vparse((char *)vsapi->propGetData(in, "input", 0, 0));
+    d.d2v = d2vparse((char *)vsapi->propGetData(in, "input", 0, 0), msg);
     if (!d.d2v) {
-        vsapi->setError(out, "Cannot open D2V file.");
+        vsapi->setError(out, msg.c_str());
         return;
     }
 
@@ -107,9 +109,9 @@ static void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore 
     d.vi.fpsNum    = d.d2v->fps_num;
     d.vi.fpsDen    = d.d2v->fps_den;
 
-    d.dec = decodeinit(d.d2v);
+    d.dec = decodeinit(d.d2v, msg);
     if (!d.dec) {
-        vsapi->setError(out, "Cannot initialize decoder.");
+        vsapi->setError(out, msg.c_str());
         return;
     }
 

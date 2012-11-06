@@ -33,9 +33,6 @@ Known Limitations & Bugs
   the future.
 * There is no native way to create D2V files on Linux or OS X right now. I hope
   to tackle this at some point. Use WINE for now.
-* It currently dumps errors to stdout, and that should be changed to either
-  stderr or to properly use VapourSynth's error throwing stuff. Currently only
-  minimal errors are supported inside the VapourSynth wrapper.
 * Currently has to copy over the decoded picture to VapourSynth's buffers.
   Should be moved to use a custom get_buffer for libavcodec at some point.
 * Needs the full path to the D2V file.

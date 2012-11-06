@@ -155,7 +155,7 @@ void decodefreep(decodecontext **ctx)
 }
 
 /* Initialize everything we can with regards to decoding */
-decodecontext *decodeinit(d2vcontext *dctx)
+decodecontext *decodeinit(d2vcontext *dctx, string& err)
 {
     decodecontext *ret;
     int i, av_ret;
@@ -175,7 +175,8 @@ decodecontext *decodeinit(d2vcontext *dctx)
 
         in = fopen(dctx->files[i].c_str(), "rb");
         if (!in) {
-            cout << "Cannot open file: " << dctx->files[i] << endl;
+            err  = "Cannot open file: ";
+            err += dctx->files[i];
             goto fail;
         }
 
@@ -205,14 +206,14 @@ decodecontext *decodeinit(d2vcontext *dctx)
     } else if (dctx->mpeg_type == 2) {
         ret->incodec = avcodec_find_decoder(AV_CODEC_ID_MPEG2VIDEO);
     } else {
-        cout << "Invalid MPEG Type." << endl;
+        err = "Invalid MPEG Type.";
         goto fail;
     }
 
     /* Allocate the codec's context. */
     ret->avctx = avcodec_alloc_context3(ret->incodec);
     if (!ret->avctx) {
-        cout << "Cannot allocate AVCodecContext." << endl;
+        err = "Cannot allocate AVCodecContext.";
         goto fail;
     }
 
@@ -222,14 +223,14 @@ decodecontext *decodeinit(d2vcontext *dctx)
     /* Open it. */
     av_ret = avcodec_open2(ret->avctx, ret->incodec, NULL);
     if (av_ret < 0) {
-        cout << "Cannot open decoder." << endl;
+        err = "Cannot open decoder.";
         goto fail;
     }
 
     /* Allocate the scratch buffer for our custom AVIO context. */
     ret->in = (uint8_t *) av_malloc(32 * 1024);
     if (!ret->in) {
-        cout << "Cannot alloc inbuf." << endl;
+        err = "Cannot alloc inbuf.";
         goto fail;
     }
 
@@ -240,7 +241,7 @@ fail:
     return NULL;
 }
 
-int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *out)
+int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *out, string& err)
 {
     frame f;
     gop g;
@@ -314,7 +315,7 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
         /* Allocate format context. */
         dctx->fctx = avformat_alloc_context();
         if (!dctx->fctx) {
-            cout << "Cannot allocate AVFormatContext." << endl;
+            err = "Cannot allocate AVFormatContext.";
             goto dfail;
         }
 
@@ -333,7 +334,7 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
             dctx->fctx->iformat = av_find_input_format("mpegts");
             *dctx->fakename      = "fakevideo.ts";
         } else {
-            cout << "Unsupported format." << endl;
+            err = "Unsupported format.";
             goto dfail;
         }
 
@@ -348,7 +349,7 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
         /* Open the demuxer. */
         av_ret = avformat_open_input(&dctx->fctx, (*dctx->fakename).c_str(), NULL, NULL);
         if (av_ret < 0) {
-            cout << "Cannot open buffer in libavformat: " << av_ret << endl;
+            err = "Cannot open buffer in libavformat.";
             goto dfail;
         }
 

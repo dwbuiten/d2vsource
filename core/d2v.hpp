@@ -100,7 +100,7 @@ typedef struct d2vcontext {
 } d2vcontext;
 
 void d2vfreep(d2vcontext **ctx);
-d2vcontext *d2vparse(char *filename);
+d2vcontext *d2vparse(char *filename, string& err);
 string d2vgetpath(char *d2v_path, string file);
 
 #endif

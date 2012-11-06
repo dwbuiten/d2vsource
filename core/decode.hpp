@@ -51,8 +51,8 @@ typedef struct decodecontext {
     int orig_file_offset;
 } decodecontext;
 
-decodecontext *decodeinit(d2vcontext *dctx);
+decodecontext *decodeinit(d2vcontext *dctx, string& err);
 void decodefreep(decodecontext **ctx);
-int decodeframe(int frame, d2vcontext *ctx, decodecontext *dctx, AVFrame *out);
+int decodeframe(int frame, d2vcontext *ctx, decodecontext *dctx, AVFrame *out, string& err);
 
 #endif

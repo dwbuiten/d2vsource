@@ -79,7 +79,7 @@ void d2vfreep(d2vcontext **ctx)
 }
 
 /* Parse the entire D2V index and build the GOP and frame lists. */
-d2vcontext *d2vparse(char *filename)
+d2vcontext *d2vparse(char *filename, string& err)
 {
     string line;
     ifstream input;
@@ -93,14 +93,14 @@ d2vcontext *d2vparse(char *filename)
 
     input.open(filename);
     if (input.fail()) {
-        cout << "D2V cannot be opened." << endl;
+        err = "D2V cannot be opened.";
         goto fail;
     }
 
     /* Check the DGIndexProjectFile version. */
     d2vgetline(input, line);
     if (line.substr(18, 2) != D2V_VERSION) {
-        cout << "D2V Version is unsupported!" << endl;
+        err = "D2V Version is unsupported!";
         goto fail;
     }
 
@@ -108,7 +108,7 @@ d2vcontext *d2vparse(char *filename)
     d2vgetline(input, line);
     ret->num_files = atoi(line.c_str());
     if (!ret->num_files) {
-        cout << "Invalid D2V File." << endl;
+        err = "Invalid D2V File.";
         goto fail;
     }
 
@@ -121,7 +121,7 @@ d2vcontext *d2vparse(char *filename)
         if (line.length()) {
             ret->files[i] = d2vgetpath(filename, line);
         } else {
-            cout << "Invalid file set in D2V." << endl;
+            err = "Invalid file set in D2V.";
             goto fail;
         }
     }
@@ -129,7 +129,7 @@ d2vcontext *d2vparse(char *filename)
     /* Next line should be empty. */
     d2vgetline(input, line);
     if (line.length()) {
-        cout << "Invalid D2V structure." << endl;
+        err = "Invalid D2V structure.";
         goto fail;
     }
 
