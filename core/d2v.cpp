@@ -58,7 +58,7 @@ string d2vgetpath(char *d2v_path, string file)
 void d2vfreep(d2vcontext **ctx)
 {
     d2vcontext *lctx = *ctx;
-    int i;
+    unsigned int i;
 
     if (!lctx)
         return;

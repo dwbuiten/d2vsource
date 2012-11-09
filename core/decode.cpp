@@ -53,7 +53,7 @@ static int64_t file_seek(void *opaque, int64_t offset, int whence)
          * which does its job fine as-is.
          */
         int64_t real_offset = offset + ctx->orig_file_offset;
-        int i;
+        unsigned int i;
 
         for(i = ctx->orig_file; i < ctx->cur_file; i++)
             real_offset -= ctx->file_sizes[i];
@@ -78,7 +78,7 @@ static int64_t file_seek(void *opaque, int64_t offset, int whence)
          * adjusted for GOP offset.
          */
         int64_t size = -(ctx->orig_file_offset);
-        int i;
+        unsigned int i;
 
         for(i = ctx->orig_file; i < ctx->file_sizes.size(); i++)
             size += ctx->file_sizes[i];
@@ -122,7 +122,7 @@ static int read_packet(void *opaque, uint8_t *buf, int size)
 void decodefreep(decodecontext **ctx)
 {
     decodecontext *lctx = *ctx;
-    int i;
+    unsigned int i;
 
     if (!lctx)
         return;
@@ -245,7 +245,8 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
 {
     frame f;
     gop g;
-    int i, j, av_ret, offset;
+    unsigned int i;
+    int j, av_ret, offset;
     bool next;
 
     /* Get our frame and the GOP its in. */
@@ -385,7 +386,7 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
             /* If we're decoding linearly, there is obviously no offset. */
             o = next ? 0 : offset;
             for(j = 0; j <= o; j++) {
-                while(dctx->inpkt.stream_index != i) {
+                while(dctx->inpkt.stream_index != (int) i) {
                     av_free_packet(&dctx->inpkt);
                     av_read_frame(dctx->fctx, &dctx->inpkt);
                 }

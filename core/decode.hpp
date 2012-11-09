@@ -46,8 +46,8 @@ typedef struct decodecontext {
 
     uint8_t *in;
 
-    int orig_file;
-    int cur_file;
+    unsigned int orig_file;
+    unsigned int cur_file;
     uint64_t orig_file_offset;
 } decodecontext;
 
