@@ -93,7 +93,6 @@ static void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore 
     d2vData *data;
     VSNodeRef *cref;
     string msg;
-    int err;
 
     d.d2v = d2vparse((char *)vsapi->propGetData(in, "input", 0, 0), msg);
     if (!d.d2v) {

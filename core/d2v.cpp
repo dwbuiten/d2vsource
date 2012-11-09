@@ -190,8 +190,6 @@ d2vcontext *d2vparse(char *filename, string& err)
     while (line.length()) {
         string tok;
         istringstream ss(line);
-        int pos = line.find(" ");
-        int old_pos;
         int offset;
         gop cur_gop;
 
