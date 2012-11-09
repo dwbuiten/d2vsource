@@ -25,8 +25,8 @@ extern "C" {
 #include <stdlib.h>
 }
 
-#include "VapourSynth.h"
-#include "VSHelper.h"
+#include <VapourSynth.h>
+#include <VSHelper.h>
 
 #include "d2v.hpp"
 #include "decode.hpp"
