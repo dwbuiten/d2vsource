@@ -48,7 +48,7 @@ typedef struct decodecontext {
 
     int orig_file;
     int cur_file;
-    int orig_file_offset;
+    uint64_t orig_file_offset;
 } decodecontext;
 
 decodecontext *decodeinit(d2vcontext *dctx, string& err);
