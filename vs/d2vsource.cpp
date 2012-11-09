@@ -91,7 +91,7 @@ static void VS_CC d2vFree(void *instanceData, VSCore *core, const VSAPI *vsapi) 
 static void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, const VSAPI *vsapi) {
     d2vData d;
     d2vData *data;
-    const VSNodeRef *cref;
+    VSNodeRef *cref;
     string msg;
     int err;
 
