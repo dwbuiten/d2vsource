@@ -234,6 +234,9 @@ decodecontext *decodeinit(d2vcontext *dctx, string& err)
         goto fail;
     }
 
+    /* We don't want to hear all the info it has. */
+    av_log_set_level(AV_LOG_PANIC);
+
     return ret;
 
 fail:
