@@ -31,7 +31,7 @@ extern "C" {
 #include "d2v.hpp"
 #include "decode.hpp"
 
-typedef struct {
+typedef struct d2vData {
     d2vcontext *d2v;
     decodecontext *dec;
     AVFrame *frame;
