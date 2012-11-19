@@ -67,5 +67,5 @@ On Linux, Mac OS X, or MinGW:
         -Icore core/*.cpp vs/*.cpp \
         `pkg-config --libs --static libavformat libavcodec`
 
-    On MinGW, you may remove -fPIC, and you must add -Wl,--dll and remove
-    -Wl,-Bsymbolic.
+    On MinGW, you may remove -fPIC, and you must add -Wl,--dll and -Wl,--add-stdcall-alias,
+    while removing -Wl,-Bsymbolic.
