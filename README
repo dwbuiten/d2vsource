@@ -33,8 +33,6 @@ Known Limitations & Bugs
   the future.
 * There is no native way to create D2V files on Linux or OS X right now. I hope
   to tackle this at some point. Use WINE for now.
-* Currently has to copy over the decoded picture to VapourSynth's buffers.
-  Should be moved to use a custom get_buffer for libavcodec at some point.
 * Needs the full path to the D2V file.
 * Probably more I'm forgetting!
 

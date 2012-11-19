@@ -31,6 +31,7 @@ extern "C" {
 #include "d2v.hpp"
 #include "d2vsource.hpp"
 #include "decode.hpp"
+#include "directrender.hpp"
 
 static void VS_CC d2vInit(VSMap *in, VSMap *out, void **instanceData, VSNode *node, VSCore *core, const VSAPI *vsapi) {
     d2vData *d = (d2vData *) * instanceData;
@@ -39,13 +40,11 @@ static void VS_CC d2vInit(VSMap *in, VSMap *out, void **instanceData, VSNode *no
 
 static const VSFrameRef *VS_CC d2vGetFrame(int n, int activationReason, void **instanceData, void **frameData, VSFrameContext *frameCtx, VSCore *core, const VSAPI *vsapi) {
     d2vData *d = (d2vData *) * instanceData;
-    VSFrameRef *f;
+    VSFrameRef *s, *f;
     string msg;
-    int stride;
+    int sstride, dstride;
     int p, i, ret, w, h;
     uint8_t *sptr, *dptr;
-
-    f = vsapi->newVideoFrame(d->vi.format, d->vi.width, d->vi.height, NULL, core);
 
     ret = decodeframe(n, d->d2v, d->dec, d->frame, msg);
     if (ret < 0) {
@@ -53,21 +52,29 @@ static const VSFrameRef *VS_CC d2vGetFrame(int n, int activationReason, void **i
         return NULL;
     }
 
-    /*
-     * Copy into VS's buffers.
-     * Should be switched to direct rendering at some point via
-     * a custom get_buffer().
-     */
-    for(p = 0; p < d->vi.format->numPlanes; p++){
-        stride = vsapi->getStride(f, p);
-        dptr   = vsapi->getWritePtr(f, p);
-        sptr   = d->frame->data[p];
-        w      = p ? d->vi.width / 2 : d->vi.width;
-        h      = p ? d->vi.height / 2 : d->vi.height;
+    /* Grab our direct-rendered frame. */
+    s = (VSFrameRef *) d->frame->opaque;
+
+    /* If our width and height are the same, just return it. */
+    if (d->vi.width == d->aligned_width && d->vi.height == d->aligned_height) {
+        f = (VSFrameRef *) vsapi->cloneFrameRef(s);
+        return f;
+    }
+
+    f = vsapi->newVideoFrame(d->vi.format, d->vi.width, d->vi.height, NULL, core);
+
+    /* Copy into VS's buffers. */
+    for(p = 0; p < d->vi.format->numPlanes; p++) {
+        sstride = vsapi->getStride(f, p);
+        dstride = vsapi->getStride(s, p);
+        dptr    = vsapi->getWritePtr(f, p);
+        sptr    = vsapi->getWritePtr(s, p);
+        w       = p ? d->vi.width / 2 : d->vi.width;
+        h       = p ? d->vi.height / 2 : d->vi.height;
         for(i = 0; i < h; i++) {
             memcpy(dptr, sptr, w);
-            dptr += stride;
-            sptr += d->frame->linesize[p];
+            dptr += sstride;
+            sptr += dstride;
         }
     }
 
@@ -102,20 +109,39 @@ static void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore 
     d.vi.fpsNum    = d.d2v->fps_num;
     d.vi.fpsDen    = d.d2v->fps_den;
 
-    d.dec = decodeinit(d.d2v, msg);
-    if (!d.dec) {
+    /* Stash the pointer to our core */
+    d.core = core;
+    d.api  = (VSAPI *) vsapi;
+
+    data = (d2vData *) malloc(sizeof(d));
+    *data = d;
+
+    data->dec = decodeinit(data->d2v, msg);
+    if (!data->dec) {
         vsapi->setError(out, msg.c_str());
         return;
     }
 
-    d.frame = avcodec_alloc_frame();
-    if (!d.frame) {
+    /*
+     * Stash our aligned width and height for use with our
+     * custom get_buffer, since it could require this.
+     */
+    data->aligned_width  = FFALIGN(data->vi.width, 16);
+    data->aligned_height = FFALIGN(data->vi.height, 32);
+
+    /*
+     * Make our private data available to libavcodec, and
+     * set our custom get/release_buffer funcs.
+     */
+    data->dec->avctx->opaque         = (void *) data;
+    data->dec->avctx->get_buffer     = VSGetBuffer;
+    data->dec->avctx->release_buffer = VSReleaseBuffer;
+
+    data->frame = avcodec_alloc_frame();
+    if (!data->frame) {
         vsapi->setError(out, "Cannot alloc frame.");
         return;
     }
-
-    data = (d2vData *) malloc(sizeof(d));
-    *data = d;
 
     cref = vsapi->createFilter(in, out, "d2vsource", d2vInit, d2vGetFrame, d2vFree, fmSerial, 0, data, core);
     vsapi->propSetNode(out, "clip", cref, 0);

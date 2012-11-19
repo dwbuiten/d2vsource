@@ -220,6 +220,12 @@ decodecontext *decodeinit(d2vcontext *dctx, string& err)
     /* Set the IDCT algorithm. */
     ret->avctx->idct_algo = dctx->idct_algo;
 
+    /*
+     * Enable EMU_EDGE so that we can use buffers that are
+     * not padded by 32 pixels.
+     */
+    ret->avctx->flags |= CODEC_FLAG_EMU_EDGE;
+
     /* Open it. */
     av_ret = avcodec_open2(ret->avctx, ret->incodec, NULL);
     if (av_ret < 0) {

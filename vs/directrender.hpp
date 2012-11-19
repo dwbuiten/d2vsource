@@ -20,25 +20,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#ifndef D2VSOURCE_H
-#define D2VSOURCE_H
+#ifndef DIRECTRENDER_H
+#define DIRECTRENDER_H
 
-#include <VapourSynth.h>
-#include <VSHelper.h>
+extern "C" {
+#include <libavcodec/avcodec.h>
+}
 
-#include "d2v.hpp"
-#include "decode.hpp"
-
-typedef struct d2vData {
-    d2vcontext *d2v;
-    decodecontext *dec;
-    AVFrame *frame;
-    VSVideoInfo vi;
-    VSCore *core;
-    VSAPI *api;
-
-    int aligned_height;
-    int aligned_width;
-} d2vData;
+int VSGetBuffer(AVCodecContext *avctx, AVFrame *pic);
+void VSReleaseBuffer(AVCodecContext *avctx, AVFrame *pic);
 
 #endif
