@@ -29,14 +29,8 @@ extern "C" {
 #include <VSHelper.h>
 
 #include "d2v.hpp"
+#include "d2vsource.hpp"
 #include "decode.hpp"
-
-typedef struct d2vData {
-    d2vcontext *d2v;
-    decodecontext *dec;
-    AVFrame *frame;
-    VSVideoInfo vi;
-} d2vData;
 
 static void VS_CC d2vInit(VSMap *in, VSMap *out, void **instanceData, VSNode *node, VSCore *core, const VSAPI *vsapi) {
     d2vData *d = (d2vData *) * instanceData;
