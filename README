@@ -14,6 +14,12 @@ There's not much else to say, so let's get right to an example:
 
     last = ret
 
+Parameters:
+    input  - Full path to input D2V file.
+    nocrop - Always use direct-rendered buffer, which may need cropping.
+             Provides a speedup when you know you need to crop your image
+             anyway, by avoiding extra memcpy calls.
+
 There's not much else to it!
 
 
