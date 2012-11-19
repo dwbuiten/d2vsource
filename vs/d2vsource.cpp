@@ -35,7 +35,7 @@ extern "C" {
 
 static void VS_CC d2vInit(VSMap *in, VSMap *out, void **instanceData, VSNode *node, VSCore *core, const VSAPI *vsapi) {
     d2vData *d = (d2vData *) * instanceData;
-    vsapi->setVideoInfo(&d->vi, node);
+    vsapi->setVideoInfo(&d->vi, 1, node);
 }
 
 static const VSFrameRef *VS_CC d2vGetFrame(int n, int activationReason, void **instanceData, void **frameData, VSFrameContext *frameCtx, VSCore *core, const VSAPI *vsapi) {
@@ -92,7 +92,6 @@ static void VS_CC d2vFree(void *instanceData, VSCore *core, const VSAPI *vsapi) 
 static void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, const VSAPI *vsapi) {
     d2vData d;
     d2vData *data;
-    VSNodeRef *cref;
     string msg;
 
     d.d2v = d2vparse((char *)vsapi->propGetData(in, "input", 0, 0), msg);
@@ -143,9 +142,7 @@ static void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore 
         return;
     }
 
-    cref = vsapi->createFilter(in, out, "d2vsource", d2vInit, d2vGetFrame, d2vFree, fmSerial, 0, data, core);
-    vsapi->propSetNode(out, "clip", cref, 0);
-    vsapi->freeNode(cref);
+    vsapi->createFilter(in, out, "d2vsource", d2vInit, d2vGetFrame, d2vFree, fmSerial, 0, data, core);
     return;
 }
 
