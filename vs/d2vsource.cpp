@@ -93,6 +93,8 @@ static void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore 
     d2vData d;
     d2vData *data;
     string msg;
+    bool no_crop;
+    int err;
 
     d.d2v = d2vparse((char *)vsapi->propGetData(in, "input", 0, 0), msg);
     if (!d.d2v) {
@@ -128,6 +130,16 @@ static void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore 
     data->aligned_width  = FFALIGN(data->vi.width, 16);
     data->aligned_height = FFALIGN(data->vi.height, 32);
 
+    /* See if nocrop is enabled, and set the width/height accordingly. */
+    no_crop = !!vsapi->propGetInt(in, "nocrop", 0, &err);
+    if (err)
+        no_crop = false;
+
+    if (no_crop) {
+        data->vi.width  = data->aligned_width;
+        data->vi.height = data->aligned_height;
+    }
+
     /*
      * Make our private data available to libavcodec, and
      * set our custom get/release_buffer funcs.
@@ -148,5 +160,5 @@ static void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore 
 
 VS_EXTERNAL_API(void) VapourSynthPluginInit(VSConfigPlugin configFunc, VSRegisterFunction registerFunc, VSPlugin *plugin) {
     configFunc("com.sources.d2vsource", "d2v", "D2V Source", VAPOURSYNTH_API_VERSION, 1, plugin);
-    registerFunc("Source", "input:data;", d2vCreate, 0, plugin);
+    registerFunc("Source", "input:data;nocrop:int:opt;", d2vCreate, 0, plugin);
 }
