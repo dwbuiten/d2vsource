@@ -90,32 +90,35 @@ static void VS_CC d2vFree(void *instanceData, VSCore *core, const VSAPI *vsapi) 
 }
 
 static void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, const VSAPI *vsapi) {
-    d2vData d;
     d2vData *data;
     string msg;
     bool no_crop;
     int err;
 
-    d.d2v = d2vparse((char *)vsapi->propGetData(in, "input", 0, 0), msg);
-    if (!d.d2v) {
+    /* Allocate our private data. */
+    data = (d2vData *) malloc(sizeof(*data));
+    if (!data) {
+        vsapi->setError(out, "Cannot allocate private data.");
+        return;
+    }
+
+    data->d2v = d2vparse((char *) vsapi->propGetData(in, "input", 0, 0), msg);
+    if (!data->d2v) {
         vsapi->setError(out, msg.c_str());
         return;
     }
 
     /* Last frame is crashy right now */
-    d.vi.numFrames = d.d2v->frames.size() - 1;
-    d.vi.width     = d.d2v->width;
-    d.vi.height    = d.d2v->height;
-    d.vi.format    = vsapi->getFormatPreset(pfYUV420P8, core);
-    d.vi.fpsNum    = d.d2v->fps_num;
-    d.vi.fpsDen    = d.d2v->fps_den;
+    data->vi.numFrames = data->d2v->frames.size() - 1;
+    data->vi.width     = data->d2v->width;
+    data->vi.height    = data->d2v->height;
+    data->vi.format    = vsapi->getFormatPreset(pfYUV420P8, core);
+    data->vi.fpsNum    = data->d2v->fps_num;
+    data->vi.fpsDen    = data->d2v->fps_den;
 
     /* Stash the pointer to our core */
-    d.core = core;
-    d.api  = (VSAPI *) vsapi;
-
-    data = (d2vData *) malloc(sizeof(d));
-    *data = d;
+    data->core = core;
+    data->api  = (VSAPI *) vsapi;
 
     data->dec = decodeinit(data->d2v, msg);
     if (!data->dec) {
