@@ -69,8 +69,8 @@ static const VSFrameRef *VS_CC d2vGetFrame(int n, int activationReason, void **i
         dstride = vsapi->getStride(s, p);
         dptr    = vsapi->getWritePtr(f, p);
         sptr    = vsapi->getWritePtr(s, p);
-        w       = p ? d->vi.width / 2 : d->vi.width;
-        h       = p ? d->vi.height / 2 : d->vi.height;
+        w       = p ? d->vi.width >> d->vi.format->subSamplingW : d->vi.width;
+        h       = p ? d->vi.height >> d->vi.format->subSamplingH : d->vi.height;
         for(i = 0; i < h; i++) {
             memcpy(dptr, sptr, w);
             dptr += sstride;
