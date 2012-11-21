@@ -38,6 +38,20 @@ int VSGetBuffer(AVCodecContext *avctx, AVFrame *pic)
     d2vData *data = (d2vData *) avctx->opaque;
     int i;
 
+    if (!data->format_set) {
+        switch(avctx->pix_fmt) {
+        case PIX_FMT_YUV420P:
+            data->vi.format = data->api->getFormatPreset(pfYUV420P8, data->core);
+            break;
+        case PIX_FMT_YUV422P:
+            data->vi.format = data->api->getFormatPreset(pfYUV422P8, data->core);
+            break;
+        default:
+            return -1;
+        }
+        data->format_set = true;
+    }
+
     vs_frame = data->api->newVideoFrame(data->vi.format, data->aligned_width, data->aligned_height, NULL, data->core);
 
     pic->opaque              = (void *) vs_frame;
@@ -46,7 +60,7 @@ int VSGetBuffer(AVCodecContext *avctx, AVFrame *pic)
     pic->pkt_pts             = avctx->pkt ? avctx->pkt->pts : AV_NOPTS_VALUE;
     pic->width               = data->aligned_width;
     pic->height              = data->aligned_height;
-    pic->format              = PIX_FMT_YUV420P;
+    pic->format              = avctx->pix_fmt;
     pic->sample_aspect_ratio = avctx->sample_aspect_ratio;
 
     for(i = 0; i < data->vi.format->numPlanes; i++) {

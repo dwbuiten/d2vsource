@@ -39,6 +39,8 @@ typedef struct d2vData {
 
     int aligned_height;
     int aligned_width;
+
+    bool format_set;
 } d2vData;
 
 #endif

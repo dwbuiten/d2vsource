@@ -108,39 +108,10 @@ static void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore 
         return;
     }
 
-    /* Last frame is crashy right now */
-    data->vi.numFrames = data->d2v->frames.size() - 1;
-    data->vi.width     = data->d2v->width;
-    data->vi.height    = data->d2v->height;
-    data->vi.format    = vsapi->getFormatPreset(pfYUV420P8, core);
-    data->vi.fpsNum    = data->d2v->fps_num;
-    data->vi.fpsDen    = data->d2v->fps_den;
-
-    /* Stash the pointer to our core */
-    data->core = core;
-    data->api  = (VSAPI *) vsapi;
-
     data->dec = decodeinit(data->d2v, msg);
     if (!data->dec) {
         vsapi->setError(out, msg.c_str());
         return;
-    }
-
-    /*
-     * Stash our aligned width and height for use with our
-     * custom get_buffer, since it could require this.
-     */
-    data->aligned_width  = FFALIGN(data->vi.width, 16);
-    data->aligned_height = FFALIGN(data->vi.height, 32);
-
-    /* See if nocrop is enabled, and set the width/height accordingly. */
-    no_crop = !!vsapi->propGetInt(in, "nocrop", 0, &err);
-    if (err)
-        no_crop = false;
-
-    if (no_crop) {
-        data->vi.width  = data->aligned_width;
-        data->vi.height = data->aligned_height;
     }
 
     /*
@@ -151,10 +122,50 @@ static void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore 
     data->dec->avctx->get_buffer     = VSGetBuffer;
     data->dec->avctx->release_buffer = VSReleaseBuffer;
 
+    /* Last frame is crashy right now */
+    data->vi.numFrames = data->d2v->frames.size() - 1;
+    data->vi.width     = data->d2v->width;
+    data->vi.height    = data->d2v->height;
+    data->vi.fpsNum    = data->d2v->fps_num;
+    data->vi.fpsDen    = data->d2v->fps_den;
+
+    /* Stash the pointer to our core */
+    data->core = core;
+    data->api  = (VSAPI *) vsapi;
+
+    /*
+     * Stash our aligned width and height for use with our
+     * custom get_buffer, since it could require this.
+     */
+    data->aligned_width  = FFALIGN(data->vi.width, 16);
+    data->aligned_height = FFALIGN(data->vi.height, 32);
+
     data->frame = avcodec_alloc_frame();
-    if (!data->frame) {
-        vsapi->setError(out, "Cannot alloc frame.");
+    if(!data->frame) {
+        vsapi->setError(out, "Cannot allocate AVFrame.");
         return;
+    }
+
+    /*
+     * Decode 1 frame to find out how the chroma is subampled.
+     * The first time our custom get_buffer is called, it will
+     * fill in data->vi.format.
+     */
+    data->format_set = false;
+    err              = decodeframe(0, data->d2v, data->dec, data->frame, msg);
+    if (err < 0) {
+        vsapi->setError(out, "Failed to decode test frame.");
+        return;
+    }
+
+    /* See if nocrop is enabled, and set the width/height accordingly. */
+    no_crop = !!vsapi->propGetInt(in, "nocrop", 0, &err);
+    if (err)
+        no_crop = false;
+
+    if (no_crop) {
+        data->vi.width  = data->aligned_width;
+        data->vi.height = data->aligned_height;
     }
 
     vsapi->createFilter(in, out, "d2vsource", d2vInit, d2vGetFrame, d2vFree, fmSerial, 0, data, core);
