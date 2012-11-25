@@ -42,9 +42,7 @@ static const VSFrameRef *VS_CC d2vGetFrame(int n, int activationReason, void **i
     d2vData *d = (d2vData *) * instanceData;
     VSFrameRef *s, *f;
     string msg;
-    int sstride, dstride;
-    int p, i, ret, w, h;
-    uint8_t *sptr, *dptr;
+    int ret;
 
     ret = decodeframe(n, d->d2v, d->dec, d->frame, msg);
     if (ret < 0) {
@@ -64,19 +62,12 @@ static const VSFrameRef *VS_CC d2vGetFrame(int n, int activationReason, void **i
     f = vsapi->newVideoFrame(d->vi.format, d->vi.width, d->vi.height, NULL, core);
 
     /* Copy into VS's buffers. */
-    for(p = 0; p < d->vi.format->numPlanes; p++) {
-        sstride = vsapi->getStride(f, p);
-        dstride = vsapi->getStride(s, p);
-        dptr    = vsapi->getWritePtr(f, p);
-        sptr    = vsapi->getWritePtr(s, p);
-        w       = p ? d->vi.width >> d->vi.format->subSamplingW : d->vi.width;
-        h       = p ? d->vi.height >> d->vi.format->subSamplingH : d->vi.height;
-        for(i = 0; i < h; i++) {
-            memcpy(dptr, sptr, w);
-            dptr += sstride;
-            sptr += dstride;
-        }
-    }
+    vs_bitblt(vsapi->getWritePtr(f, 0), vsapi->getStride(f, 0), vsapi->getWritePtr(s, 0), vsapi->getStride(s, 0),
+              d->vi.width, d->vi.height);
+    vs_bitblt(vsapi->getWritePtr(f, 1), vsapi->getStride(f, 1), vsapi->getWritePtr(s, 1), vsapi->getStride(s, 1),
+              d->vi.width >> d->vi.format->subSamplingW, d->vi.height >> d->vi.format->subSamplingH);
+    vs_bitblt(vsapi->getWritePtr(f, 2), vsapi->getStride(f, 2), vsapi->getWritePtr(s, 2), vsapi->getStride(s, 2),
+              d->vi.width >> d->vi.format->subSamplingW, d->vi.height >> d->vi.format->subSamplingH);
 
     return f;
 }
