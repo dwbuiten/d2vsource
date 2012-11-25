@@ -41,6 +41,8 @@ typedef struct decodecontext {
 
     AVPacket inpkt;
 
+    int stream_index;
+
     int last_frame;
     int last_gop;
 

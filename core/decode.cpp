@@ -168,6 +168,9 @@ decodecontext *decodeinit(d2vcontext *dctx, string& err)
     /* Holds our "filename" we pass to libavformat. */
     ret->fakename = new string;
 
+    /* Set our stream index to -1 (uninitialized). */
+    ret->stream_index = -1;
+
     /* Open each file and stash its size. */
     for(i = 0; i < dctx->num_files; i++) {
         FILE *in;
@@ -255,7 +258,7 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
     frame f;
     gop g;
     unsigned int i;
-    int j, av_ret, offset;
+    int o, j, av_ret, offset;
     bool next;
 
     /* Get our frame and the GOP its in. */
@@ -380,53 +383,56 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
         av_init_packet(&dctx->inpkt);
     }
 
-    /* Loop over all of our streams and only process our video stream. */
-    for(i = 0; i < dctx->fctx->nb_streams; i++) {
-        if (dctx->fctx->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO) {
-            int o;
+    /* Set our stream index if we need to. */
+    if (dctx->stream_index == -1) {
+        for(i = 0; i < dctx->fctx->nb_streams; i++) {
+            if (dctx->fctx->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO) {
+                dctx->stream_index = (int) i;
+                break;
+            }
+        }
+    }
+
+    /*
+     * We don't need to read a new packet in if we are decoding
+     * linearly, since it's still there from the previous iteration.
+     */
+    if (!next)
+        av_read_frame(dctx->fctx, &dctx->inpkt);
+
+    /* If we're decoding linearly, there is obviously no offset. */
+    o = next ? 0 : offset;
+    for(j = 0; j <= o; j++) {
+        while(dctx->inpkt.stream_index != dctx->stream_index) {
+            av_free_packet(&dctx->inpkt);
+            av_read_frame(dctx->fctx, &dctx->inpkt);
+        }
+
+        /*
+         * Loop until we have a whole frame, since there can be
+         * multi-packet frames.
+         */
+        av_ret = 0;
+        while(!av_ret) {
+            AVPacket orig = dctx->inpkt;
 
             /*
-             * We don't need to read a new packet in if we are decoding
-             * linearly, since it's still there from the previous iteration.
+             * Decoding might not consume out whole packet, so
+             * stash the original packet info, loop until it
+             * is all consumed, and then restore it, it so
+             * we can free it properly.
              */
-            if (!next)
-                av_read_frame(dctx->fctx, &dctx->inpkt);
+            while(dctx->inpkt.size > 0) {
+                int r = avcodec_decode_video2(dctx->avctx, out, &av_ret, &dctx->inpkt);
 
-            /* If we're decoding linearly, there is obviously no offset. */
-            o = next ? 0 : offset;
-            for(j = 0; j <= o; j++) {
-                while(dctx->inpkt.stream_index != (int) i) {
-                    av_free_packet(&dctx->inpkt);
-                    av_read_frame(dctx->fctx, &dctx->inpkt);
-                }
-
-                /*
-                 * Loop until we have a whole frame, since there can be
-                 * multi-packet frames.
-                 */
-                av_ret = 0;
-                while(!av_ret) {
-                    AVPacket orig = dctx->inpkt;
-
-                    /*
-                     * Decoding might not consume out whole packet, so
-                     * stash the original packet info, loop until it
-                     * is all consumed, and then restore it, it so
-                     * we can free it properly.
-                     */
-                    while(dctx->inpkt.size > 0) {
-                        int r = avcodec_decode_video2(dctx->avctx, out, &av_ret, &dctx->inpkt);
-
-                        dctx->inpkt.size -= r;
-                        dctx->inpkt.data += r;
-                    }
-
-                    dctx->inpkt = orig;
-                    av_free_packet(&dctx->inpkt);
-
-                    av_read_frame(dctx->fctx, &dctx->inpkt);
-                }
+                dctx->inpkt.size -= r;
+                dctx->inpkt.data += r;
             }
+
+            dctx->inpkt = orig;
+            av_free_packet(&dctx->inpkt);
+
+            av_read_frame(dctx->fctx, &dctx->inpkt);
         }
     }
 
