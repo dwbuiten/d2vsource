@@ -383,14 +383,21 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
         av_init_packet(&dctx->inpkt);
     }
 
-    /* Set our stream index if we need to. */
+    /*
+     * Set our stream index if we need to.
+     * Set it to the stream that matches our MPEG-TS PID if applicable.
+     */
     if (dctx->stream_index == -1) {
-        for(i = 0; i < dctx->fctx->nb_streams; i++) {
-            if (dctx->fctx->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO) {
-                dctx->stream_index = (int) i;
-                break;
-            }
-        }
+        if (ctx->ts_pid)
+            for(i = 0; i < dctx->fctx->nb_streams; i++)
+                if (dctx->fctx->streams[i]->id == ctx->ts_pid)
+                    break;
+        else
+            for(i = 0; i < dctx->fctx->nb_streams; i++)
+                if (dctx->fctx->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO)
+                    break;
+
+        dctx->stream_index = (int) i;
     }
 
     /*
