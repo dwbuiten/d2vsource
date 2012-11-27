@@ -147,7 +147,7 @@ d2vcontext *d2vparse(char *filename, string& err)
         } else if (l == "MPEG2_Transport_PID") {
             int pos = r.find(",");
 
-            ret->ts_pid = atoi(r.substr(0, pos).c_str());
+            ret->ts_pid = strtoul(r.substr(0, pos).c_str(), NULL, 16);
         } else if (l == "MPEG_Type") {
             ret->mpeg_type = atoi(r.c_str());
         } else if (l == "iDCT_Algorithm") {
