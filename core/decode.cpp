@@ -430,9 +430,11 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
             }
 
             dctx->inpkt = orig;
-            av_free_packet(&dctx->inpkt);
 
-            av_read_frame(dctx->fctx, &dctx->inpkt);
+            do {
+                av_free_packet(&dctx->inpkt);
+                av_read_frame(dctx->fctx, &dctx->inpkt);
+            } while(dctx->inpkt.stream_index != dctx->stream_index);
         }
     }
 
