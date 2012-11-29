@@ -20,32 +20,17 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#ifndef D2VSOURCE_H
-#define D2VSOURCE_H
+extern "C" {
+#include <stdint.h>
+#include <stdlib.h>
+}
 
 #include <VapourSynth.h>
 #include <VSHelper.h>
 
-#include "d2v.hpp"
-#include "decode.hpp"
+#include "d2vsource.hpp"
 
-typedef struct d2vData {
-    d2vcontext *d2v;
-    decodecontext *dec;
-    AVFrame *frame;
-    VSVideoInfo vi;
-    VSCore *core;
-    VSAPI *api;
-
-    int aligned_height;
-    int aligned_width;
-
-    bool format_set;
-} d2vData;
-
-void VS_CC d2vInit(VSMap *in, VSMap *out, void **instanceData, VSNode *node, VSCore *core, const VSAPI *vsapi);
-void VS_CC d2vFree(void *instanceData, VSCore *core, const VSAPI *vsapi);
-void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, const VSAPI *vsapi);
-const VSFrameRef *VS_CC d2vGetFrame(int n, int activationReason, void **instanceData, void **frameData, VSFrameContext *frameCtx, VSCore *core, const VSAPI *vsapi);
-
-#endif
+VS_EXTERNAL_API(void) VapourSynthPluginInit(VSConfigPlugin configFunc, VSRegisterFunction registerFunc, VSPlugin *plugin) {
+    configFunc("com.sources.d2vsource", "d2v", "D2V Source", VAPOURSYNTH_API_VERSION, 1, plugin);
+    registerFunc("Source", "input:data;nocrop:int:opt;", d2vCreate, 0, plugin);
+}

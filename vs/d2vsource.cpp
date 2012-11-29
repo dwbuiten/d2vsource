@@ -33,12 +33,12 @@ extern "C" {
 #include "decode.hpp"
 #include "directrender.hpp"
 
-static void VS_CC d2vInit(VSMap *in, VSMap *out, void **instanceData, VSNode *node, VSCore *core, const VSAPI *vsapi) {
+void VS_CC d2vInit(VSMap *in, VSMap *out, void **instanceData, VSNode *node, VSCore *core, const VSAPI *vsapi) {
     d2vData *d = (d2vData *) * instanceData;
     vsapi->setVideoInfo(&d->vi, 1, node);
 }
 
-static const VSFrameRef *VS_CC d2vGetFrame(int n, int activationReason, void **instanceData, void **frameData, VSFrameContext *frameCtx, VSCore *core, const VSAPI *vsapi) {
+const VSFrameRef *VS_CC d2vGetFrame(int n, int activationReason, void **instanceData, void **frameData, VSFrameContext *frameCtx, VSCore *core, const VSAPI *vsapi) {
     d2vData *d = (d2vData *) * instanceData;
     VSFrameRef *s, *f;
     string msg;
@@ -72,7 +72,7 @@ static const VSFrameRef *VS_CC d2vGetFrame(int n, int activationReason, void **i
     return f;
 }
 
-static void VS_CC d2vFree(void *instanceData, VSCore *core, const VSAPI *vsapi) {
+void VS_CC d2vFree(void *instanceData, VSCore *core, const VSAPI *vsapi) {
     d2vData *d = (d2vData *) instanceData;
     d2vfreep(&d->d2v);
     decodefreep(&d->dec);
@@ -80,7 +80,7 @@ static void VS_CC d2vFree(void *instanceData, VSCore *core, const VSAPI *vsapi) 
     free(d);
 }
 
-static void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, const VSAPI *vsapi) {
+void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, const VSAPI *vsapi) {
     d2vData *data;
     string msg;
     bool no_crop;
@@ -161,9 +161,4 @@ static void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore 
 
     vsapi->createFilter(in, out, "d2vsource", d2vInit, d2vGetFrame, d2vFree, fmSerial, 0, data, core);
     return;
-}
-
-VS_EXTERNAL_API(void) VapourSynthPluginInit(VSConfigPlugin configFunc, VSRegisterFunction registerFunc, VSPlugin *plugin) {
-    configFunc("com.sources.d2vsource", "d2v", "D2V Source", VAPOURSYNTH_API_VERSION, 1, plugin);
-    registerFunc("Source", "input:data;nocrop:int:opt;", d2vCreate, 0, plugin);
 }
