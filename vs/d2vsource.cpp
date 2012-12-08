@@ -160,5 +160,4 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
     }
 
     vsapi->createFilter(in, out, "d2vsource", d2vInit, d2vGetFrame, d2vFree, fmSerial, 0, data, core);
-    return;
 }
