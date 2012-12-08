@@ -29,6 +29,8 @@ extern "C" {
 #include <stdint.h>
 }
 
+#define GOP_FLAG_CLOSED 0x400
+
 using namespace std;
 
 typedef struct frame {
