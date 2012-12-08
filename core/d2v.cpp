@@ -116,7 +116,7 @@ d2vcontext *d2vparse(char *filename, string& err)
     ret->files = new string[ret->num_files];
 
     /* Read them all in. */
-    for (i = 0; i < ret->num_files; i++) {
+    for(i = 0; i < ret->num_files; i++) {
         d2vgetline(input, line);
         if (line.length()) {
             ret->files[i] = d2vgetpath(filename, line);
@@ -187,7 +187,7 @@ d2vcontext *d2vparse(char *filename, string& err)
     /* Read in all GOPs. */
     i = 0;
     d2vgetline(input, line);
-    while (line.length()) {
+    while(line.length()) {
         string tok;
         istringstream ss(line);
         int offset;
@@ -202,7 +202,7 @@ d2vcontext *d2vparse(char *filename, string& err)
         ss >> dec >> cur_gop.cell;
 
         offset = 0;
-        while (!ss.eof()) {
+        while(!ss.eof()) {
             uint16_t flags;
             frame f;
 

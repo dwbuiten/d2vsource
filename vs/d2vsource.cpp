@@ -33,13 +33,16 @@ extern "C" {
 #include "decode.hpp"
 #include "directrender.hpp"
 
-void VS_CC d2vInit(VSMap *in, VSMap *out, void **instanceData, VSNode *node, VSCore *core, const VSAPI *vsapi) {
-    d2vData *d = (d2vData *) * instanceData;
+void VS_CC d2vInit(VSMap *in, VSMap *out, void **instanceData, VSNode *node, VSCore *core, const VSAPI *vsapi)
+{
+    d2vData *d = (d2vData *) *instanceData;
     vsapi->setVideoInfo(&d->vi, 1, node);
 }
 
-const VSFrameRef *VS_CC d2vGetFrame(int n, int activationReason, void **instanceData, void **frameData, VSFrameContext *frameCtx, VSCore *core, const VSAPI *vsapi) {
-    d2vData *d = (d2vData *) * instanceData;
+const VSFrameRef *VS_CC d2vGetFrame(int n, int activationReason, void **instanceData, void **frameData,
+                                    VSFrameContext *frameCtx, VSCore *core, const VSAPI *vsapi)
+{
+    d2vData *d = (d2vData *) *instanceData;
     VSFrameRef *s, *f;
     string msg;
     int ret;
@@ -72,7 +75,8 @@ const VSFrameRef *VS_CC d2vGetFrame(int n, int activationReason, void **instance
     return f;
 }
 
-void VS_CC d2vFree(void *instanceData, VSCore *core, const VSAPI *vsapi) {
+void VS_CC d2vFree(void *instanceData, VSCore *core, const VSAPI *vsapi)
+{
     d2vData *d = (d2vData *) instanceData;
     d2vfreep(&d->d2v);
     decodefreep(&d->dec);
@@ -80,7 +84,8 @@ void VS_CC d2vFree(void *instanceData, VSCore *core, const VSAPI *vsapi) {
     free(d);
 }
 
-void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, const VSAPI *vsapi) {
+void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, const VSAPI *vsapi)
+{
     d2vData *data;
     string msg;
     bool no_crop;
@@ -113,14 +118,14 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
     data->dec->avctx->get_buffer     = VSGetBuffer;
     data->dec->avctx->release_buffer = VSReleaseBuffer;
 
-    /* Last frame is crashy right now */
+    /* Last frame is crashy right now. */
     data->vi.numFrames = data->d2v->frames.size() - 1;
     data->vi.width     = data->d2v->width;
     data->vi.height    = data->d2v->height;
     data->vi.fpsNum    = data->d2v->fps_num;
     data->vi.fpsDen    = data->d2v->fps_den;
 
-    /* Stash the pointer to our core */
+    /* Stash the pointer to our core. */
     data->core = core;
     data->api  = (VSAPI *) vsapi;
 
@@ -132,7 +137,7 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
     data->aligned_height = FFALIGN(data->vi.height, 32);
 
     data->frame = avcodec_alloc_frame();
-    if(!data->frame) {
+    if (!data->frame) {
         vsapi->setError(out, "Cannot allocate AVFrame.");
         return;
     }
