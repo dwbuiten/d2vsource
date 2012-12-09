@@ -398,6 +398,15 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
                     break;
         }
 
+        if (i >= dctx->fctx->nb_streams) {
+            if (ctx->ts_pid)
+                err = "PID does not exist in source file.";
+            else
+                err = "No video stream found.";
+
+            goto dfail;
+        }
+
         dctx->stream_index = (int) i;
     }
 
