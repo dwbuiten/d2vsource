@@ -388,14 +388,17 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
      * Set it to the stream that matches our MPEG-TS PID if applicable.
      */
     if (dctx->stream_index == -1) {
-        if (ctx->ts_pid)
+        if (ctx->ts_pid) {
             for(i = 0; i < dctx->fctx->nb_streams; i++)
                 if (dctx->fctx->streams[i]->id == ctx->ts_pid)
                     break;
-        else
+        } else {
             for(i = 0; i < dctx->fctx->nb_streams; i++)
                 if (dctx->fctx->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO)
                     break;
+        }
+        if (i >= dctx->fctx->nb_streams)
+            goto dfail;
 
         dctx->stream_index = (int) i;
     }
