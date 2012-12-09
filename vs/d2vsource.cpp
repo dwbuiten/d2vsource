@@ -150,7 +150,8 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
     data->format_set = false;
     err              = decodeframe(0, data->d2v, data->dec, data->frame, msg);
     if (err < 0) {
-        vsapi->setError(out, "Failed to decode test frame.");
+        msg.insert(0, "Failed to decode test frame: ");
+        vsapi->setError(out, msg.c_str());
         return;
     }
 
