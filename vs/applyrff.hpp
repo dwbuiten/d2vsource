@@ -20,20 +20,30 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-extern "C" {
-#include <stdint.h>
-#include <stdlib.h>
-}
+#ifndef APPLYRFF_H
+#define APPLYRFF_H
 
 #include <VapourSynth.h>
 #include <VSHelper.h>
 
-#include "applyrff.hpp"
-#include "d2vsource.hpp"
+#include "d2v.hpp"
 
-VS_EXTERNAL_API(void) VapourSynthPluginInit(VSConfigPlugin configFunc, VSRegisterFunction registerFunc, VSPlugin *plugin)
-{
-    configFunc("com.sources.d2vsource", "d2v", "D2V Source", VAPOURSYNTH_API_VERSION, 1, plugin);
-    registerFunc("Source", "input:data;nocrop:int:opt;", d2vCreate, 0, plugin);
-    registerFunc("ApplyRFF", "clip:clip;d2v:data;", rffCreate, 0, plugin);
-}
+typedef struct fieldFrame {
+    int top;
+    int bottom;
+} fieldFrame;
+
+typedef struct rffData {
+    d2vcontext *d2v;
+    vector<fieldFrame> frames;
+
+    VSVideoInfo vi;
+    VSNodeRef *node;
+} rffData;
+
+void VS_CC rffInit(VSMap *in, VSMap *out, void **instanceData, VSNode *node, VSCore *core, const VSAPI *vsapi);
+void VS_CC rffFree(void *instanceData, VSCore *core, const VSAPI *vsapi);
+void VS_CC rffCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, const VSAPI *vsapi);
+const VSFrameRef *VS_CC rffGetFrame(int n, int activationReason, void **instanceData, void **frameData, VSFrameContext *frameCtx, VSCore *core, const VSAPI *vsapi);
+
+#endif

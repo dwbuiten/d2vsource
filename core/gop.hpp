@@ -31,6 +31,8 @@ extern "C" {
 
 #define GOP_FLAG_CLOSED 0x400
 
+#define FRAME_FLAG_RFF 0x01
+
 using namespace std;
 
 typedef struct frame {
