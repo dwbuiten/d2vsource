@@ -110,12 +110,10 @@ static int read_packet(void *opaque, uint8_t *buf, int size)
     if (ret < size && ctx->cur_file != ctx->files.size() - 1) {
         ctx->cur_file++;
         fseeko(ctx->files[ctx->cur_file], 0, SEEK_SET);
-        fread(buf + ret, 1, size - ret, ctx->files[ctx->cur_file]);
-    } else {
-        return ret;
+        ret += fread(buf + ret, 1, size - ret, ctx->files[ctx->cur_file]);
     }
 
-    return size;
+    return ret;
 }
 
 /* Conditionally free all memebers of decodecontext. */
