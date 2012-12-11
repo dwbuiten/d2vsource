@@ -103,6 +103,9 @@ for opt; do
         --enable-debug)
             DEBUG="enabled"
             ;;
+        --cxx=*)
+            CXX="$optarg"
+            ;;
         --extra-cxxflags=*)
             XCXXFLAGS="$optarg"
             ;;
