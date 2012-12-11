@@ -174,7 +174,7 @@ fi
 
 PKGCONFIGBIN="pkg-config"
 test -n "$(which ${CROSS}${PKGCONFIGBIN} 2> /dev/null)" && \
-    PKGCONFIGEXE=${CROSS}${PKGCONFIGBIN}
+    PKGCONFIGBIN=${CROSS}${PKGCONFIGBIN}
 
 if $PKGCONFIGBIN --exists $DEPLIBS 2> /dev/null; then
     LIBS="$($PKGCONFIGBIN --libs $DEPLIBS)"
