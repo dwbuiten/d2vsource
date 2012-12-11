@@ -88,7 +88,7 @@ LIBNAME=""
 CXXFLAGS="-Wall -D__STDC_CONSTANT_MACROS -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -I. -I$SRCDIR/vs -I$SRCDIR/core"
 LDFLAGS=""
 SOFLAGS="-shared -Wl,-Bsymbolic"
-DEPLIBS="libavformat libavcodec vapoursynth"
+DEPLIBS="libavformat libavcodec"
 
 # -- options ----------------------------------------------------------------
 echo all command lines: > config.log
@@ -147,10 +147,12 @@ case "$TARGET_OS" in
         ;;
     *darwin*)
         LIBNAME="libd2vsource.dylib"
+        DEPLIBS="$DEPLIBS vapoursynth"
         SOFLAGS="$SOFLAGS -dynamiclib -Wl,-undefined,suppress -Wl,-read_only_relocs,suppress -Wl,-flat_namespace"
         ;;
     *linux*)
         LIBNAME="libd2vsource.so"
+        DEPLIBS="$DEPLIBS vapoursynth"
         CXXFLAGS="$CXXFLAGS -fPIC"
         SOFLAGS="$SOFLAGS -fPIC"
         ;;
