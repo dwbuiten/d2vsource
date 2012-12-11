@@ -115,6 +115,9 @@ for opt; do
         --extra-libs=*)
             XLIBS="$optarg"
             ;;
+        --target-os=*)
+            TARGET_OS="$optarg"
+            ;;
         --cross-prefix=*)
             CROSS="$optarg"
             ;;
