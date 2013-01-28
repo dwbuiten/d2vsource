@@ -277,7 +277,7 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
      * from the previous GOP (one at most is needed), and adjust
      * out offset accordingly.
      */
-    if (!(g.info & GOP_FLAG_CLOSED) && (f.gop - 1 > 0)) {
+    if (!(g.info & GOP_FLAG_CLOSED) && (f.gop > 0)) {
         int n = frame_num;
         frame t = ctx->frames[n];
 
