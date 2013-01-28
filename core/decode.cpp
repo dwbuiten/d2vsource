@@ -257,7 +257,7 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
     gop g;
     unsigned int i;
     int o, j, av_ret, offset;
-    bool next;
+    bool next = true;
 
     /* Get our frame and the GOP its in. */
     f = ctx->frames[frame_num];
@@ -277,26 +277,57 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
      * from the previous GOP (one at most is needed), and adjust
      * out offset accordingly.
      */
-    if (!(g.info & GOP_FLAG_CLOSED) && (f.gop > 0)) {
-        int n = frame_num;
-        frame t = ctx->frames[n];
+    if (!(g.info & GOP_FLAG_CLOSED)) {
+        if (f.gop == 0) {
+            int n = 0;
 
-        g = ctx->gops[f.gop - 1];
+            /*
+             * Adjust the offset by the number of frames
+             * that require of the previous GOP when the
+             * first GOP is open.
+             */
+            while(!(g.flags[n] & GOP_FLAG_PROGRESSIVE))
+                n++;
 
-        /*
-         * Find the offset of the last frame in the
-         * previous GOP and add it to our offset.
-         */
-        while(t.offset)
+            /*
+             * Only adjust the offset if it's feasible;
+             * that is, if it produces a positive offset.
+             */
+            offset = n > f.offset ? 0 : f.offset - n;
+
+            /*
+             * If the offset is 0, force decoding.
+             *
+             * FIXME: This method increases the number
+             * of frames to be decoded.
+             */
+            next = offset != 0;
+        } else {
+            int n = frame_num;
+            frame t = ctx->frames[n];
+
+            g = ctx->gops[f.gop - 1];
+
+            /*
+             * Find the offset of the last frame in the
+             * previous GOP and add it to our offset.
+             */
+            while(t.offset)
+                t = ctx->frames[--n];
+
             t = ctx->frames[--n];
 
-        t = ctx->frames[--n];
+            /*
+             * Subtract number of frames that require the
+             * previous GOP.
+             */
+            n = 0;
+            if (!(g.info & GOP_FLAG_CLOSED))
+                while(!(g.flags[n] & GOP_FLAG_PROGRESSIVE))
+                    n++;
 
-        /*
-         * Subtract one from the offset to compensate for
-         * libavcodec delay, I think.
-         */
-        offset += t.offset - 1;
+            offset += t.offset + 1 - n;
+        }
     }
 
     /*
@@ -305,7 +336,7 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
      * the same, or also linear. If so, we can decode
      * linearly.
      */
-    next = (dctx->last_gop == f.gop || dctx->last_gop == f.gop - 1) && dctx->last_frame == frame_num - 1;
+    next = next && (dctx->last_gop == f.gop || dctx->last_gop == f.gop - 1) && dctx->last_frame == frame_num - 1;
 
     /* Skip GOP initialization if we're decoding linearly. */
     if (!next) {

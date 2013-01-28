@@ -52,9 +52,6 @@ Parameters:
 Known Limitations & Bugs
 ------------------------
 
-* Has decode / frame-accuracy issues on files that start with leading B frames.
-  These are very easy to detect given the flags in the D2V file, but I am
-  unsure how to handle this using libavcodec, or if it is even possible.
 * Only works with D2V files created by DGIndex (version flag 16).
 * Not all the IDCT algorithms in DGDecode are in libavcodec, so I've tried to
   map them as best I could. See idct_algo_conv in d2v.hpp for more info.
