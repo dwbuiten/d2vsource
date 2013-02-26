@@ -119,7 +119,7 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
     data->dec->avctx->release_buffer = VSReleaseBuffer;
 
     /* Last frame is crashy right now. */
-    data->vi.numFrames = data->d2v->frames.size() - 1;
+    data->vi.numFrames = data->d2v->frames.size();
     data->vi.width     = data->d2v->width;
     data->vi.height    = data->d2v->height;
     data->vi.fpsNum    = data->d2v->fps_num;
