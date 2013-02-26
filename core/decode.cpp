@@ -468,6 +468,17 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
          * Loop until we have a whole frame, since there can be
          * multi-packet frames.
          */
+
+
+        if (frame_num == ctx->frames.size() - 1)
+        {
+            dctx->inpkt.size = 0;
+            dctx->inpkt.data = NULL;
+
+            int r = avcodec_decode_video2(dctx->avctx, out, &av_ret, &dctx->inpkt);
+            break;
+        }
+
         av_ret = 0;
         while(!av_ret) {
             AVPacket orig = dctx->inpkt;
