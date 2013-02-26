@@ -57,8 +57,6 @@ Known Limitations & Bugs
   map them as best I could. See idct_algo_conv in d2v.hpp for more info.
 * Does not support user specified cropping. Would be easy to add, but I disagree
   with the premise. Use VapourSynth's cropping.
-* Doesn't decode the very last frame in the stream. This will be fixed in
-  the future.
 * There is no native way to create D2V files on Linux or OS X right now. I hope
   to tackle this at some point. Use WINE for now.
 * Needs the full path to the D2V file.
