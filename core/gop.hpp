@@ -29,6 +29,7 @@ extern "C" {
 #include <stdint.h>
 }
 
+#define GOP_FLAG_PROGRESSIVE 0x80
 #define GOP_FLAG_CLOSED 0x400
 
 #define FRAME_FLAG_RFF 0x01
