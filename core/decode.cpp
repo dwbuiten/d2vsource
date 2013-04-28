@@ -227,6 +227,9 @@ decodecontext *decodeinit(d2vcontext *dctx, string& err)
      */
     ret->avctx->flags |= CODEC_FLAG_EMU_EDGE;
 
+    /* Use refcounted frames. */
+    ret->avctx->refcounted_frames = 1;
+
     /* Open it. */
     av_ret = avcodec_open2(ret->avctx, ret->incodec, NULL);
     if (av_ret < 0) {
@@ -492,6 +495,10 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
                 av_read_frame(dctx->fctx, &dctx->inpkt);
             } while(dctx->inpkt.stream_index != dctx->stream_index);
         }
+
+        /* Unreference all but the last frame. */
+        if (j != o)
+            av_frame_unref(out);
     }
 
     /*

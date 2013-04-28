@@ -47,6 +47,9 @@ const VSFrameRef *VS_CC d2vGetFrame(int n, int activationReason, void **instance
     string msg;
     int ret;
 
+    /* Unreference the previously decoded frame. */
+    av_frame_unref(d->frame);
+
     ret = decodeframe(n, d->d2v, d->dec, d->frame, msg);
     if (ret < 0) {
         vsapi->setFilterError(msg.c_str(), frameCtx);
@@ -80,6 +83,7 @@ void VS_CC d2vFree(void *instanceData, VSCore *core, const VSAPI *vsapi)
     d2vData *d = (d2vData *) instanceData;
     d2vfreep(&d->d2v);
     decodefreep(&d->dec);
+    av_frame_unref(d->frame);
     av_freep(&d->frame);
     free(d);
 }
@@ -115,8 +119,7 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
      * set our custom get/release_buffer funcs.
      */
     data->dec->avctx->opaque         = (void *) data;
-    data->dec->avctx->get_buffer     = VSGetBuffer;
-    data->dec->avctx->release_buffer = VSReleaseBuffer;
+    data->dec->avctx->get_buffer2    = VSGetBuffer;
 
     /* Last frame is crashy right now. */
     data->vi.numFrames = data->d2v->frames.size();

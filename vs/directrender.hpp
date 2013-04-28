@@ -27,7 +27,16 @@ extern "C" {
 #include <libavcodec/avcodec.h>
 }
 
-int VSGetBuffer(AVCodecContext *avctx, AVFrame *pic);
-void VSReleaseBuffer(AVCodecContext *avctx, AVFrame *pic);
+#include "d2v.hpp"
+
+typedef struct VSData {
+    VSFrameRef *vs_frame;
+    d2vData *d2v;
+    int planes;
+    int freed;
+} VSData;
+
+int VSGetBuffer(AVCodecContext *avctx, AVFrame *pic, int flag);
+void VSReleaseBuffer(void *opaque, uint8_t *data);
 
 #endif

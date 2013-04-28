@@ -28,13 +28,14 @@ extern "C" {
 }
 
 #include "d2vsource.hpp"
+#include "directrender.hpp"
 
 #include <VapourSynth.h>
 #include <VSHelper.h>
 
-int VSGetBuffer(AVCodecContext *avctx, AVFrame *pic)
+int VSGetBuffer(AVCodecContext *avctx, AVFrame *pic, int flag)
 {
-    VSFrameRef *vs_frame;
+    VSData *userdata;
     d2vData *data = (d2vData *) avctx->opaque;
     int i;
 
@@ -52,10 +53,13 @@ int VSGetBuffer(AVCodecContext *avctx, AVFrame *pic)
         data->format_set = true;
     }
 
-    vs_frame = data->api->newVideoFrame(data->vi.format, data->aligned_width, data->aligned_height, NULL, data->core);
+    userdata = new VSData;
+    userdata->d2v      = (d2vData *) avctx->opaque;
+    userdata->planes   = data->vi.format->numPlanes;
+    userdata->freed    = 0;
+    userdata->vs_frame = data->api->newVideoFrame(data->vi.format, data->aligned_width, data->aligned_height, NULL, data->core);
 
-    pic->opaque              = (void *) vs_frame;
-    pic->type                = FF_BUFFER_TYPE_USER;
+    pic->opaque              = (void *) userdata->vs_frame;
     pic->extended_data       = pic->data;
     pic->pkt_pts             = avctx->pkt ? avctx->pkt->pts : AV_NOPTS_VALUE;
     pic->width               = data->aligned_width;
@@ -64,25 +68,24 @@ int VSGetBuffer(AVCodecContext *avctx, AVFrame *pic)
     pic->sample_aspect_ratio = avctx->sample_aspect_ratio;
 
     for(i = 0; i < data->vi.format->numPlanes; i++) {
-        pic->base[i]     = data->api->getWritePtr(vs_frame, i);
-        pic->data[i]     = pic->base[i];
-        pic->linesize[i] = data->api->getStride(vs_frame, i);
+        pic->data[i]     = data->api->getWritePtr(userdata->vs_frame, i);
+        pic->linesize[i] = data->api->getStride(userdata->vs_frame, i);
+        pic->buf[i]      = av_buffer_create(pic->data[i], pic->linesize[i] * pic->height, VSReleaseBuffer, userdata, 0);
+        if (!pic->buf[i])
+            return -1;
     }
 
     return 0;
 }
 
-void VSReleaseBuffer(AVCodecContext *avctx, AVFrame *pic)
+void VSReleaseBuffer(void *opaque, uint8_t *data)
 {
-    VSFrameRef *vs_frame = (VSFrameRef *) pic->opaque;
-    d2vData *data = (d2vData *) avctx->opaque;
-    int i;
+    VSData *userdata = (VSData *) opaque;
+    if (!userdata->freed)
+        userdata->d2v->api->freeFrame(userdata->vs_frame);
 
-    for(i = 0; i < data->vi.format->numPlanes; i++) {
-        pic->base[i]     = NULL;
-        pic->data[i]     = NULL;
-        pic->linesize[i] = 0;
-    }
+    userdata->freed++;
 
-    data->api->freeFrame(vs_frame);
+    if (userdata->freed == userdata->planes)
+        delete userdata;
 }
