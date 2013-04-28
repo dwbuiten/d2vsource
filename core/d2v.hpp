@@ -62,9 +62,9 @@ static const enum streamtype streamtype_conv[4] = {
 
 static const int idct_algo_conv[8] = {
     FF_IDCT_AUTO,
-    FF_IDCT_LIBMPEG2MMX,
-    FF_IDCT_LIBMPEG2MMX,
-    FF_IDCT_LIBMPEG2MMX,
+    FF_IDCT_AUTO,
+    FF_IDCT_AUTO,
+    FF_IDCT_AUTO,
     FF_IDCT_AUTO,
     FF_IDCT_AUTO,
     FF_IDCT_XVIDMMX,
