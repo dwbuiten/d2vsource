@@ -32,8 +32,6 @@ extern "C" {
 typedef struct VSData {
     VSFrameRef *vs_frame;
     d2vData *d2v;
-    int planes;
-    int freed;
 } VSData;
 
 int VSGetBuffer(AVCodecContext *avctx, AVFrame *pic, int flag);

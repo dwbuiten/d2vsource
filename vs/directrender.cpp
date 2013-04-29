@@ -55,9 +55,11 @@ int VSGetBuffer(AVCodecContext *avctx, AVFrame *pic, int flag)
 
     userdata = new VSData;
     userdata->d2v      = (d2vData *) avctx->opaque;
-    userdata->planes   = data->vi.format->numPlanes;
-    userdata->freed    = 0;
     userdata->vs_frame = data->api->newVideoFrame(data->vi.format, data->aligned_width, data->aligned_height, NULL, data->core);
+
+    pic->buf[0] = av_buffer_create(NULL, 0, VSReleaseBuffer, userdata, 0);
+    if (!pic->buf[0])
+        return -1;
 
     pic->opaque              = (void *) userdata->vs_frame;
     pic->extended_data       = pic->data;
@@ -70,9 +72,6 @@ int VSGetBuffer(AVCodecContext *avctx, AVFrame *pic, int flag)
     for(i = 0; i < data->vi.format->numPlanes; i++) {
         pic->data[i]     = data->api->getWritePtr(userdata->vs_frame, i);
         pic->linesize[i] = data->api->getStride(userdata->vs_frame, i);
-        pic->buf[i]      = av_buffer_create(pic->data[i], pic->linesize[i] * pic->height, VSReleaseBuffer, userdata, 0);
-        if (!pic->buf[i])
-            return -1;
     }
 
     return 0;
@@ -81,11 +80,7 @@ int VSGetBuffer(AVCodecContext *avctx, AVFrame *pic, int flag)
 void VSReleaseBuffer(void *opaque, uint8_t *data)
 {
     VSData *userdata = (VSData *) opaque;
-    if (!userdata->freed)
-        userdata->d2v->api->freeFrame(userdata->vs_frame);
 
-    userdata->freed++;
-
-    if (userdata->freed == userdata->planes)
-        delete userdata;
+    userdata->d2v->api->freeFrame(userdata->vs_frame);
+    delete userdata;
 }
