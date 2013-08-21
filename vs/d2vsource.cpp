@@ -169,4 +169,26 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
     }
 
     vsapi->createFilter(in, out, "d2vsource", d2vInit, d2vGetFrame, d2vFree, fmSerial, 0, data, core);
+
+    int rff = !!vsapi->propGetInt(in, "rff", 0, &err);
+    if (err)
+        rff = 1;
+
+    if (rff) {
+        VSPlugin *d2vPlugin = vsapi->getPluginNs("d2v", core);
+
+        VSMap *args = vsapi->createMap();
+        VSNodeRef *before = vsapi->propGetNode(out, "clip", 0, NULL);
+        vsapi->propSetNode(args, "clip", before, paReplace);
+        vsapi->freeNode(before);
+        vsapi->propSetData(args, "d2v", vsapi->propGetData(in, "input", 0, NULL), vsapi->propGetDataSize(in, "input", 0, NULL), paReplace);
+
+        VSMap *ret = vsapi->invoke(d2vPlugin, "ApplyRFF", args);
+        vsapi->freeMap(args);
+
+        VSNodeRef *after = vsapi->propGetNode(ret, "clip", 0, NULL);
+        vsapi->propSetNode(out, "clip", after, paReplace);
+        vsapi->freeNode(after);
+        vsapi->freeMap(ret);
+    }
 }
