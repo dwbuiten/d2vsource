@@ -11,7 +11,6 @@ There's not much else to say, so let's get right to an example:
     core.std.LoadPlugin(path=r'C:\path\to\d2vsource.dll')
 
     ret = core.d2v.Source(input=r'C:\path\to\my.d2v')
-    ret = core.d2v.ApplyRFF(ret, d2v=r'C:\path\to\my.d2v')
 
     ret.set_output()
 
@@ -20,12 +19,14 @@ Parameters:
     nocrop - Always use direct-rendered buffer, which may need cropping.
              Provides a speedup when you know you need to crop your image
              anyway, by avoiding extra memcpy calls.
+    rff    - Invoke ApplyRFF (True by default)
 
 
 About RFF Flags
 ---------------
 
-Unlike DGDecode, it's up to the user to apply RFF flags as they see fit
+Unlike DGDecode, it's up to the user to apply RFF flags as they see fit,
+by passing rff=True to the source function, or by passing rff=False and
 using core.d2v.ApplyRFF(clip, d2v=r'C:\path\to\my.d2v') after calling
 the source function. Unless you know your source is 100% FILM, you
 probably want to apply these. DGDecode's traditional "Force FILM" mode
@@ -35,12 +36,6 @@ you can simply set Force FILM in DGIndex, which will set the framerate
 properly in the D2V file, and then not apply RFF flags. It's also
 feasible to trim away any non-FILM frames and still Force FILM.
 
-A simple convenience function is:
-
-    def D2VSource(d2vfile, cropping):
-        clip = core.d2v.Source(input=d2vfile, nocrop=cropping)
-        clip = core.d2v.ApplyRFF(clip, d2v=d2vfile)
-        return clip
 
 Parameters:
     clip - Input clip.

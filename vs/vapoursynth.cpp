@@ -34,6 +34,6 @@ extern "C" {
 VS_EXTERNAL_API(void) VapourSynthPluginInit(VSConfigPlugin configFunc, VSRegisterFunction registerFunc, VSPlugin *plugin)
 {
     configFunc("com.sources.d2vsource", "d2v", "D2V Source", VAPOURSYNTH_API_VERSION, 1, plugin);
-    registerFunc("Source", "input:data;nocrop:int:opt;", d2vCreate, 0, plugin);
+    registerFunc("Source", "input:data;nocrop:int:opt;rff:int:opt;", d2vCreate, 0, plugin);
     registerFunc("ApplyRFF", "clip:clip;d2v:data;", rffCreate, 0, plugin);
 }
