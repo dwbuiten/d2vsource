@@ -6,14 +6,14 @@ There's not much else to say, so let's get right to an example:
 
     import vapoursynth as vs
 
-    core = vs.Core()
+    core = vs.get_core()
 
     core.std.LoadPlugin(path=r'C:\path\to\d2vsource.dll')
 
     ret = core.d2v.Source(input=r'C:\path\to\my.d2v')
     ret = core.d2v.ApplyRFF(ret, d2v=r'C:\path\to\my.d2v')
 
-    last = ret
+    ret.set_output()
 
 Parameters:
     input  - Full path to input D2V file.
