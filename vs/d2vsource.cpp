@@ -105,12 +105,15 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
     data->d2v = d2vparse((char *) vsapi->propGetData(in, "input", 0, 0), msg);
     if (!data->d2v) {
         vsapi->setError(out, msg.c_str());
+        free(data);
         return;
     }
 
     data->dec = decodeinit(data->d2v, msg);
     if (!data->dec) {
         vsapi->setError(out, msg.c_str());
+        d2vfreep(&data->d2v);
+        free(data);
         return;
     }
 
@@ -142,6 +145,9 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
     data->frame = avcodec_alloc_frame();
     if (!data->frame) {
         vsapi->setError(out, "Cannot allocate AVFrame.");
+        d2vfreep(&data->d2v);
+        decodefreep(&data->dec);
+        free(data);
         return;
     }
 
@@ -155,6 +161,11 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
     if (err < 0) {
         msg.insert(0, "Failed to decode test frame: ");
         vsapi->setError(out, msg.c_str());
+        d2vfreep(&data->d2v);
+        decodefreep(&data->dec);
+        av_frame_unref(data->frame);
+        av_freep(&data->frame);
+        free(data);
         return;
     }
 
@@ -185,6 +196,18 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
 
         VSMap *ret = vsapi->invoke(d2vPlugin, "ApplyRFF", args);
         vsapi->freeMap(args);
+
+        const char *error = vsapi->getError(ret);
+        if (error) {
+            vsapi->setError(out, error);
+            vsapi->freeMap(ret);
+            d2vfreep(&data->d2v);
+            decodefreep(&data->dec);
+            av_frame_unref(data->frame);
+            av_freep(&data->frame);
+            free(data);
+            return;
+        }
 
         VSNodeRef *after = vsapi->propGetNode(ret, "clip", 0, NULL);
         vsapi->propSetNode(out, "clip", after, paReplace);
