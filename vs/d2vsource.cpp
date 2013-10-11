@@ -197,6 +197,18 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
         VSMap *ret = vsapi->invoke(d2vPlugin, "ApplyRFF", args);
         vsapi->freeMap(args);
 
+        const char *error = vsapi->getError(ret);
+        if (error) {
+            vsapi->setError(out, error);
+            vsapi->freeMap(ret);
+            d2vfreep(&data->d2v);
+            decodefreep(&data->dec);
+            av_frame_unref(data->frame);
+            av_freep(&data->frame);
+            free(data);
+            return;
+        }
+
         VSNodeRef *after = vsapi->propGetNode(ret, "clip", 0, NULL);
         vsapi->propSetNode(out, "clip", after, paReplace);
         vsapi->freeNode(after);
