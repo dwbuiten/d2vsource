@@ -186,7 +186,7 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
         rff = 1;
 
     if (rff) {
-        VSPlugin *d2vPlugin = vsapi->getPluginNs("d2v", core);
+        VSPlugin *d2vPlugin = vsapi->getPluginByNs("d2v", core);
 
         VSMap *args = vsapi->createMap();
         VSNodeRef *before = vsapi->propGetNode(out, "clip", 0, NULL);
