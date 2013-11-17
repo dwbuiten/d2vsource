@@ -50,6 +50,10 @@ const VSFrameRef *VS_CC d2vGetFrame(int n, int activationReason, void **instance
     /* Unreference the previously decoded frame. */
     av_frame_unref(d->frame);
 
+    if (n >= d->d2v->frames.size()) {
+        n = d->d2v->frames.size() - 1;
+    }
+
     ret = decodeframe(n, d->d2v, d->dec, d->frame, msg);
     if (ret < 0) {
         vsapi->setFilterError(msg.c_str(), frameCtx);
