@@ -47,6 +47,9 @@ const VSFrameRef *VS_CC d2vGetFrame(int n, int activationReason, void **instance
     string msg;
     int ret;
 
+    // Range limit n
+    n  = (n < 0) ? 0 : (n>= d->vi->numFrames) ? d->vi->numFrames -1 : n;
+
     /* Unreference the previously decoded frame. */
     av_frame_unref(d->frame);
 
