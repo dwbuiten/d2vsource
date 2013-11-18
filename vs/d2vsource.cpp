@@ -142,7 +142,7 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
     data->aligned_width  = FFALIGN(data->vi.width, 16);
     data->aligned_height = FFALIGN(data->vi.height, 32);
 
-    data->frame = avcodec_alloc_frame();
+    data->frame = av_frame_alloc();
     if (!data->frame) {
         vsapi->setError(out, "Cannot allocate AVFrame.");
         d2vfreep(&data->d2v);
