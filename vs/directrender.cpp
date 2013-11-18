@@ -63,7 +63,6 @@ int VSGetBuffer(AVCodecContext *avctx, AVFrame *pic, int flag)
 
     pic->opaque              = (void *) userdata->vs_frame;
     pic->extended_data       = pic->data;
-    pic->pkt_pts             = avctx->pkt ? avctx->pkt->pts : AV_NOPTS_VALUE;
     pic->width               = data->aligned_width;
     pic->height              = data->aligned_height;
     pic->format              = avctx->pix_fmt;
