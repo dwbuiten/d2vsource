@@ -25,6 +25,8 @@ extern "C" {
 #include <stdlib.h>
 }
 
+#include <algorithm>
+
 #include <VapourSynth.h>
 #include <VSHelper.h>
 
@@ -60,8 +62,8 @@ const VSFrameRef *VS_CC rffGetFrame(int n, int activationReason, void **instance
         if (samefields) {
             vsapi->requestFrameFilter(top, d->node, frameCtx);
         } else {
-            vsapi->requestFrameFilter(top, d->node, frameCtx);
-            vsapi->requestFrameFilter(bottom, d->node, frameCtx);
+            vsapi->requestFrameFilter(min(top, bottom), d->node, frameCtx);
+            vsapi->requestFrameFilter(max(bottom, bottom), d->node, frameCtx);
         }
         return NULL;
     }
