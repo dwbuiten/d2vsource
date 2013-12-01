@@ -198,12 +198,13 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
         vsapi->propSetNode(args, "clip", before, paReplace);
         vsapi->freeNode(before);
 
-        ret = vsapi->invoke(corePlugin, "Cache", args);
+        ret    = vsapi->invoke(corePlugin, "Cache", args);
         middle = vsapi->propGetNode(ret, "clip", 0, NULL);
         vsapi->freeMap(ret);
 
         vsapi->propSetNode(args, "clip", middle, paReplace);
-        vsapi->propSetData(args, "d2v", vsapi->propGetData(in, "input", 0, NULL), vsapi->propGetDataSize(in, "input", 0, NULL), paReplace);
+        vsapi->propSetData(args, "d2v", vsapi->propGetData(in, "input", 0, NULL),
+                           vsapi->propGetDataSize(in, "input", 0, NULL), paReplace);
 
         ret = vsapi->invoke(d2vPlugin, "ApplyRFF", args);
         vsapi->freeMap(args);
