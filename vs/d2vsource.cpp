@@ -181,9 +181,9 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
 
     vsapi->createFilter(in, out, "d2vsource", d2vInit, d2vGetFrame, d2vFree, fmSerial, 0, data, core);
 
-    int rff = !!vsapi->propGetInt(in, "rff", 0, &err);
+    bool rff = !!vsapi->propGetInt(in, "rff", 0, &err);
     if (err)
-        rff = 1;
+        rff = true;
 
     if (rff) {
         VSPlugin *d2vPlugin = vsapi->getPluginById("com.sources.d2vsource", core);
