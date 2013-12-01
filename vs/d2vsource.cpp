@@ -58,6 +58,10 @@ const VSFrameRef *VS_CC d2vGetFrame(int n, int activationReason, void **instance
 
     /* Grab our direct-rendered frame. */
     s = (VSFrameRef *) d->frame->opaque;
+    if (!s) {
+        vsapi->setFilterError("Seek pattern broke d2vsource! Please send a sample.", frameCtx);
+        return NULL;
+    }
 
     /* If our width and height are the same, just return it. */
     if (d->vi.width == d->aligned_width && d->vi.height == d->aligned_height) {
