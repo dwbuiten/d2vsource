@@ -97,6 +97,7 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
     d2vData *data;
     string msg;
     bool no_crop;
+    bool rff;
     int err;
 
     /* Allocate our private data. */
@@ -185,7 +186,7 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
 
     vsapi->createFilter(in, out, "d2vsource", d2vInit, d2vGetFrame, d2vFree, fmSerial, 0, data, core);
 
-    bool rff = !!vsapi->propGetInt(in, "rff", 0, &err);
+    rff = !!vsapi->propGetInt(in, "rff", 0, &err);
     if (err)
         rff = true;
 
