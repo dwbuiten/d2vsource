@@ -153,7 +153,7 @@ void decodefreep(decodecontext **ctx)
 }
 
 /* Initialize everything we can with regards to decoding */
-decodecontext *decodeinit(d2vcontext *dctx, string& err)
+decodecontext *decodeinit(d2vcontext *dctx, int threads, string& err)
 {
     decodecontext *ret;
     int i, av_ret;
@@ -220,6 +220,9 @@ decodecontext *decodeinit(d2vcontext *dctx, string& err)
 
     /* Set the IDCT algorithm. */
     ret->avctx->idct_algo = dctx->idct_algo;
+
+    /* Set the thread count. */
+    ret->avctx->thread_count = threads;
 
     /*
      * Enable EMU_EDGE so that we can use buffers that are

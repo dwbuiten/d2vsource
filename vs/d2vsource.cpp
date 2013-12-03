@@ -98,7 +98,18 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
     string msg;
     bool no_crop;
     bool rff;
+    int threads;
     int err;
+
+    /* Need to get thread info before anything to pass to decodeinit(). */
+    threads = vsapi->propGetInt(in, "threads", 0, &err);
+    if (err)
+        threads = 0;
+
+    if (threads < 0) {
+        vsapi->setError(out, "Invalid number of threads.");
+        return;
+    }
 
     /* Allocate our private data. */
     data = (d2vData *) malloc(sizeof(*data));
@@ -114,7 +125,7 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
         return;
     }
 
-    data->dec = decodeinit(data->d2v, msg);
+    data->dec = decodeinit(data->d2v, threads, msg);
     if (!data->dec) {
         vsapi->setError(out, msg.c_str());
         d2vfreep(&data->d2v);
