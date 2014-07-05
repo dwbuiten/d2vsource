@@ -23,6 +23,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <cassert>
 
 extern "C" {
 #include <libavformat/avformat.h>
@@ -34,6 +35,10 @@ extern "C" {
 #include "d2v.hpp"
 #include "decode.hpp"
 #include "gop.hpp"
+
+#ifdef _MSC_VER
+#include <Windows.h>
+#endif
 
 using namespace std;
 
@@ -77,7 +82,7 @@ static int64_t file_seek(void *opaque, int64_t offset, int whence)
          * Return the total filesize of all files combined,
          * adjusted for GOP offset.
          */
-        int64_t size = -(ctx->orig_file_offset);
+        int64_t size = -(int64_t)(ctx->orig_file_offset);
         unsigned int i;
 
         for(i = ctx->orig_file; i < ctx->file_sizes.size(); i++)
@@ -99,7 +104,7 @@ static int64_t file_seek(void *opaque, int64_t offset, int whence)
 static int read_packet(void *opaque, uint8_t *buf, int size)
 {
     decodecontext *ctx = (decodecontext *) opaque;
-    int ret;
+    size_t ret;
 
     /*
      * If we read in less than we got asked for, and we're
@@ -113,7 +118,9 @@ static int read_packet(void *opaque, uint8_t *buf, int size)
         ret += fread(buf + ret, 1, size - ret, ctx->files[ctx->cur_file]);
     }
 
-    return ret;
+    assert(ret <= (std::numeric_limits<int>::max)());
+
+    return static_cast<int>(ret);
 }
 
 /* Conditionally free all memebers of decodecontext. */
@@ -174,7 +181,21 @@ decodecontext *decodeinit(d2vcontext *dctx, int threads, string& err)
         FILE *in;
         int64_t size;
 
+#ifdef _MSC_VER
+        wchar_t filename[_MAX_PATH];
+
+        size = MultiByteToWideChar(CP_UTF8, 0, dctx->files[i].c_str(), -1, filename, ARRAYSIZE(filename));
+        if (size == 0) {
+            err  = "Cannot parse file name: ";
+            err += dctx->files[i];
+            goto fail;
+        }
+
+        in = _wfopen(filename, L"rb");
+#elif
         in = fopen(dctx->files[i].c_str(), "rb");
+#endif
+
         if (!in) {
             err  = "Cannot open file: ";
             err += dctx->files[i];

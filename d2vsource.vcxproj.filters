@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
+    </Filter>
+    <Filter Include="Source Files\core">
+      <UniqueIdentifier>{d2b5e4a4-667c-4cf1-89f6-1fd3a6663fa0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\vs">
+      <UniqueIdentifier>{732e2c6c-017a-4946-927d-647bab549fd8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\core">
+      <UniqueIdentifier>{44320df8-0d5c-48a5-86bb-243169e6c80c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\vs">
+      <UniqueIdentifier>{9e4ea008-a9ec-44c3-b3c9-a6b3425607bd}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="core\compat.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="core\d2v.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="core\decode.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="vs\applyrff.cpp">
+      <Filter>Source Files\vs</Filter>
+    </ClCompile>
+    <ClCompile Include="vs\d2vsource.cpp">
+      <Filter>Source Files\vs</Filter>
+    </ClCompile>
+    <ClCompile Include="vs\directrender.cpp">
+      <Filter>Source Files\vs</Filter>
+    </ClCompile>
+    <ClCompile Include="vs\vapoursynth.cpp">
+      <Filter>Source Files\vs</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="core\compat.hpp">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="core\d2v.hpp">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="core\decode.hpp">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="core\gop.hpp">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="vs\applyrff.hpp">
+      <Filter>Header Files\vs</Filter>
+    </ClInclude>
+    <ClInclude Include="vs\d2vsource.hpp">
+      <Filter>Header Files\vs</Filter>
+    </ClInclude>
+    <ClInclude Include="vs\directrender.hpp">
+      <Filter>Header Files\vs</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
