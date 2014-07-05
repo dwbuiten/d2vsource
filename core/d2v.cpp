@@ -46,7 +46,7 @@ string d2vgetpath(const char *d2v_path, const string& file)
 {
     string path;
     string d2v    = d2v_path;
-    int delim_pos = d2v.rfind(PATH_DELIM) + 1;
+    size_t delim_pos = d2v.rfind(PATH_DELIM) + 1;
 
     if ((file.substr(0, 1) == "/" || file.substr(1, 1) == ":") || (d2v.substr(0, 1) != "/" && d2v.substr(1, 1) != ":")) {
         path = file;
@@ -154,7 +154,7 @@ d2vcontext *d2vparse(const char *filename, string& err)
     /* Iterate over the D2V header and fill the context members. */
     d2vgetline(input, line);
     while(line.length()) {
-        int mid  = line.find("=");
+        size_t mid = line.find("=");
         string l = line.substr(0, mid);
         string r = line.substr(mid + 1, line.length() - 1);
 
@@ -163,7 +163,7 @@ d2vcontext *d2vparse(const char *filename, string& err)
 
             ret->stream_type = streamtype_conv[type];
         } else if (l == "MPEG2_Transport_PID") {
-            int pos = r.find(",");
+            size_t pos = r.find(",");
 
             ret->ts_pid = strtoul(r.substr(0, pos).c_str(), NULL, 16);
         } else if (l == "MPEG_Type") {
@@ -177,21 +177,21 @@ d2vcontext *d2vparse(const char *filename, string& err)
 
             ret->yuvrgb_scale = scaletype_conv[type];
         } else if (l == "Picture_Size") {
-            int pos = r.find("x");
+            size_t pos = r.find("x");
 
             ret->width  = atoi(r.substr(      0, pos           ).c_str());
             ret->height = atoi(r.substr(pos + 1, r.length() - 1).c_str());
         } else if (l == "Frame_Rate") {
-            int start = r.find("(") + 1;
-            int mid   = r.find("/");
-            int end   = r.find(")");
+            size_t start = r.find("(") + 1;
+            size_t mid = r.find("/");
+            size_t end = r.find(")");
 
             ret->fps_num = atoi(r.substr(  start, mid).c_str());
             ret->fps_den = atoi(r.substr(mid + 1, end).c_str());
         } else if (l == "Location") {
-            int pos1 = r.find(",");
-            int pos2 = r.find(",", pos1 + 1);
-            int pos3 = r.find(",", pos2 + 1);
+            size_t pos1 = r.find(",");
+            size_t pos2 = r.find(",", pos1 + 1);
+            size_t pos3 = r.find(",", pos2 + 1);
 
             ret->loc.startfile   = strtoul(r.substr(       0, pos1          ).c_str(), NULL, 16);
             ret->loc.startoffset = strtoul(r.substr(pos1 + 1, pos2          ).c_str(), NULL, 16);
@@ -228,12 +228,11 @@ d2vcontext *d2vparse(const char *filename, string& err)
 
             /*
              * We have to use a 16-bit int to force the stringstream to
-             * output to read more than one character, so double check its
-             * size.
+             * read more than one character, so double check its size.
              */
             assert(flags <= 0xFF);
 
-            cur_gop.flags.push_back(flags);
+            cur_gop.flags.push_back((uint8_t) flags);
 
             f.gop    = i;
             f.offset = offset;
