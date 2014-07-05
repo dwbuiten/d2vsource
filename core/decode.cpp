@@ -23,6 +23,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <cassert>
 
 extern "C" {
 #include <libavformat/avformat.h>
@@ -81,7 +82,7 @@ static int64_t file_seek(void *opaque, int64_t offset, int whence)
          * Return the total filesize of all files combined,
          * adjusted for GOP offset.
          */
-        int64_t size = -(ctx->orig_file_offset);
+        int64_t size = -(int64_t)(ctx->orig_file_offset);
         unsigned int i;
 
         for(i = ctx->orig_file; i < ctx->file_sizes.size(); i++)
@@ -103,7 +104,7 @@ static int64_t file_seek(void *opaque, int64_t offset, int whence)
 static int read_packet(void *opaque, uint8_t *buf, int size)
 {
     decodecontext *ctx = (decodecontext *) opaque;
-    int ret;
+    size_t ret;
 
     /*
      * If we read in less than we got asked for, and we're
@@ -117,7 +118,9 @@ static int read_packet(void *opaque, uint8_t *buf, int size)
         ret += fread(buf + ret, 1, size - ret, ctx->files[ctx->cur_file]);
     }
 
-    return ret;
+    assert(ret <= (std::numeric_limits<int>::max)());
+
+    return static_cast<int>(ret);
 }
 
 /* Conditionally free all memebers of decodecontext. */
