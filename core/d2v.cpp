@@ -36,9 +36,13 @@ extern "C" {
 #include "d2v.hpp"
 #include "gop.hpp"
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 using namespace std;
 
-string d2vgetpath(char *d2v_path, string file)
+string d2vgetpath(const char *d2v_path, const string& file)
 {
     string path;
     string d2v    = d2v_path;
@@ -79,7 +83,7 @@ void d2vfreep(d2vcontext **ctx)
 }
 
 /* Parse the entire D2V index and build the GOP and frame lists. */
-d2vcontext *d2vparse(char *filename, string& err)
+d2vcontext *d2vparse(const char *filename, string& err)
 {
     string line;
     ifstream input;
@@ -91,7 +95,21 @@ d2vcontext *d2vparse(char *filename, string& err)
     /* Zero the context to aid in conditional freeing later. */
     memset(ret, 0, sizeof(*ret));
 
+#ifdef _WIN32
+    wchar_t wide_filename[_MAX_PATH];
+
+    i = MultiByteToWideChar(CP_UTF8, 0, filename, -1, wide_filename, ARRAYSIZE(wide_filename));
+    if (!i) {
+        err  = "D2V filename is invalid: ";
+        err += filename;
+        goto fail;
+    }
+
+    input.open(wide_filename);
+#elif
     input.open(filename);
+#endif
+
     if (input.fail()) {
         err = "D2V cannot be opened.";
         goto fail;

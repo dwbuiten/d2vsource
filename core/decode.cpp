@@ -35,6 +35,10 @@ extern "C" {
 #include "decode.hpp"
 #include "gop.hpp"
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 using namespace std;
 
 /*
@@ -174,7 +178,21 @@ decodecontext *decodeinit(d2vcontext *dctx, int threads, string& err)
         FILE *in;
         int64_t size;
 
+#ifdef _WIN32
+        wchar_t filename[_MAX_PATH];
+
+        size = MultiByteToWideChar(CP_UTF8, 0, dctx->files[i].c_str(), -1, filename, ARRAYSIZE(filename));
+        if (!size) {
+            err  = "Cannot parse file name: ";
+            err += dctx->files[i];
+            goto fail;
+        }
+
+        in = _wfopen(filename, L"rb");
+#elif
         in = fopen(dctx->files[i].c_str(), "rb");
+#endif
+
         if (!in) {
             err  = "Cannot open file: ";
             err += dctx->files[i];
