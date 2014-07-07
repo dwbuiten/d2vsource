@@ -45,7 +45,7 @@ using namespace std;
 string d2vgetpath(const char *d2v_path, const string& file)
 {
     string path;
-    string d2v    = d2v_path;
+    string d2v       = d2v_path;
     size_t delim_pos = d2v.rfind(PATH_DELIM) + 1;
 
     if ((file.substr(0, 1) == "/" || file.substr(1, 1) == ":") || (d2v.substr(0, 1) != "/" && d2v.substr(1, 1) != ":")) {
@@ -155,8 +155,8 @@ d2vcontext *d2vparse(const char *filename, string& err)
     d2vgetline(input, line);
     while(line.length()) {
         size_t mid = line.find("=");
-        string l = line.substr(0, mid);
-        string r = line.substr(mid + 1, line.length() - 1);
+        string l   = line.substr(0, mid);
+        string r   = line.substr(mid + 1, line.length() - 1);
 
         if (l == "Stream_Type") {
             int type = atoi(r.c_str());
@@ -183,8 +183,8 @@ d2vcontext *d2vparse(const char *filename, string& err)
             ret->height = atoi(r.substr(pos + 1, r.length() - 1).c_str());
         } else if (l == "Frame_Rate") {
             size_t start = r.find("(") + 1;
-            size_t mid = r.find("/");
-            size_t end = r.find(")");
+            size_t mid   = r.find("/");
+            size_t end   = r.find(")");
 
             ret->fps_num = atoi(r.substr(  start, mid).c_str());
             ret->fps_den = atoi(r.substr(mid + 1, end).c_str());
