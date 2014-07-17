@@ -189,7 +189,7 @@ decodecontext *decodeinit(d2vcontext *dctx, int threads, string& err)
         }
 
         in = _wfopen(filename, L"rb");
-#elif
+#else
         in = fopen(dctx->files[i].c_str(), "rb");
 #endif
 

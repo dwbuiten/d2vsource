@@ -106,7 +106,7 @@ d2vcontext *d2vparse(const char *filename, string& err)
     }
 
     input.open(wide_filename);
-#elif
+#else
     input.open(filename);
 #endif
 
