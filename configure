@@ -192,7 +192,12 @@ fi
 
 
 log_echo "checking for vapoursynth headers..."
-if ! cc_check "$CXXFLAGS" "$LDFLAGS $LIBS $XLIBS" "VapourSynth.h" "getVapourSynthAPI;" ; then
+if $PKGCONFIGBIN --exists vapoursynth 2> /dev/null; then
+    VSCFLAGS="$($PKGCONFIGBIN --cflags vapoursynth)"
+else
+    log_echo "warning: pkg-config or pc files not found, header detection may be inaccurate."
+fi
+if ! cc_check "$CXXFLAGS $VSCFLAGS" "$LDFLAGS $LIBS $XLIBS" "VapourSynth.h" "getVapourSynthAPI;" ; then
     log_echo "error: vapoursynth checking failed."
     error_exit "VapourSynth.h might not be installed."
 fi
