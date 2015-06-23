@@ -191,6 +191,12 @@ else
 fi
 
 
+log_echo "checking for vapoursynth headers..."
+if ! cc_check "$CXXFLAGS" "$LDFLAGS $LIBS $XLIBS" "VapourSynth.h" "getVapourSynthAPI;" ; then
+    log_echo "error: vapoursynth checking failed."
+    error_exit "VapourSynth.h might not be installed."
+fi
+
 log_echo "checking for libavformat..."
 if ! cc_check "$CXXFLAGS" "$LDFLAGS $LIBS $XLIBS" "libavformat/avformat.h" "avformat_find_stream_info(0,0);" ; then
     log_echo "error: libavformat checking failed."
