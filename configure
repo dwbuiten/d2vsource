@@ -172,8 +172,8 @@ fi
 if cc_check "-Os -ffast-math $CXXFLAGS" "$LDFLAGS"; then
     CXXFLAGS="-Os -ffast-math $CXXFLAGS"
 fi
-if cc_check "$CXXFLAGS -fexcess-precision=fast" "$LDFLAGS"; then
-    CXXFLAGS="$CXXFLAGS -fexcess-precision=fast"
+if cc_check "$CXXFLAGS" "$LDFLAGS"; then
+    CXXFLAGS="$CXXFLAGS"
 fi
 
 PKGCONFIGBIN="pkg-config"
@@ -222,7 +222,7 @@ fi
 
 LDFLAGS="$SOFLAGS $LDFLAGS"
 LIBS="$LIBS $XLIBS"
-
+CXXFLAGS="$CXXFLAGS $VSCFLAGS"
 
 cat >> config.mak << EOF
 CXX = $CXX
