@@ -130,7 +130,7 @@ void decodefreep(decodecontext **ctx)
         return;
 
     av_freep(&lctx->in);
-    av_free_packet(&lctx->inpkt);
+    av_packet_unref(&lctx->inpkt);
 
     if (lctx->fctx) {
         if (lctx->fctx->pb)
@@ -432,7 +432,7 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
         avformat_find_stream_info(dctx->fctx, NULL);
 
         /* Free and re-initialize any existing packet. */
-        av_free_packet(&dctx->inpkt);
+        av_packet_unref(&dctx->inpkt);
         av_init_packet(&dctx->inpkt);
     }
 
@@ -474,7 +474,7 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
     o = next ? 0 : offset;
     for(j = 0; j <= o; j++) {
         while(dctx->inpkt.stream_index != dctx->stream_index) {
-            av_free_packet(&dctx->inpkt);
+            av_packet_unref(&dctx->inpkt);
             av_read_frame(dctx->fctx, &dctx->inpkt);
         }
 
@@ -483,7 +483,7 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
          * with one frame of latency in libavcodec.
          */
         if ((unsigned int) frame_num == ctx->frames.size() - 1) {
-            av_free_packet(&dctx->inpkt);
+            av_packet_unref(&dctx->inpkt);
             avcodec_decode_video2(dctx->avctx, out, &av_ret, &dctx->inpkt);
             break;
         }
@@ -512,7 +512,7 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
             dctx->inpkt = orig;
 
             do {
-                av_free_packet(&dctx->inpkt);
+                av_packet_unref(&dctx->inpkt);
                 av_read_frame(dctx->fctx, &dctx->inpkt);
             } while(dctx->inpkt.stream_index != dctx->stream_index);
         }
