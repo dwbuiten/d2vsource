@@ -44,6 +44,7 @@ const VSFrameRef *VS_CC d2vGetFrame(int n, int activationReason, void **instance
 {
     d2vData *d = (d2vData *) *instanceData;
     VSFrameRef *s, *f;
+    VSMap *props;
     string msg;
     int ret;
 
@@ -78,6 +79,39 @@ const VSFrameRef *VS_CC d2vGetFrame(int n, int activationReason, void **instance
               d->vi.width >> d->vi.format->subSamplingW, d->vi.height >> d->vi.format->subSamplingH);
     vs_bitblt(vsapi->getWritePtr(f, 2), vsapi->getStride(f, 2), vsapi->getWritePtr(s, 2), vsapi->getStride(s, 2),
               d->vi.width >> d->vi.format->subSamplingW, d->vi.height >> d->vi.format->subSamplingH);
+
+    props = vsapi->getFramePropsRW(f);
+
+    /*
+     * The DGIndex manual simply says:
+     *     "The matrix field displays the currently applicable matrix_coefficients value (colorimetry)."
+     *
+     * I can only assume this lines up with the tables VS uses correctly.
+     */
+    vsapi->propSetInt(props, "_Matrix", d->d2v->gops[d->d2v->frames[n].gop].matrix, paReplace);
+    vsapi->propSetInt(props, "_DurationNum", d->d2v->fps_den, paReplace);
+    vsapi->propSetInt(props, "_DurationDen", d->d2v->fps_num, paReplace);
+    vsapi->propSetFloat(props, "_AbsoluteTime",
+                        (static_cast<double>(d->d2v->fps_den) * n) / static_cast<double>(d->d2v->fps_num), paReplace);
+
+    if (d->d2v->yuvrgb_scale == PC)
+        vsapi->propSetInt(props, "_ColorRange", 0, paReplace);
+    else if (d->d2v->yuvrgb_scale == TV)
+        vsapi->propSetInt(props, "_ColorRange", 1, paReplace);
+
+    switch (d->frame->pict_type) {
+    case AV_PICTURE_TYPE_I:
+        vsapi->propSetData(props, "_PictType", "I", 1, paReplace);
+        break;
+    case AV_PICTURE_TYPE_P:
+        vsapi->propSetData(props, "_PictType", "P", 1, paReplace);
+        break;
+    case AV_PICTURE_TYPE_B:
+        vsapi->propSetData(props, "_PictType", "B", 1, paReplace);
+        break;
+    default:
+        break;
+    }
 
     return f;
 }

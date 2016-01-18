@@ -77,6 +77,22 @@ const VSFrameRef *VS_CC rffGetFrame(int n, int activationReason, void **instance
     sb = samefields ? NULL : (VSFrameRef *) vsapi->getFrameFilter(bottom, d->node, frameCtx);
     f  = vsapi->newVideoFrame(d->vi.format, d->vi.width, d->vi.height, NULL, core);
 
+    /*
+     * Set progressive/interlaced flag.
+     *
+     * This assumes the d2v has been properly run through d2vfix,
+     * so that there is only one field order.
+     *
+     * This is probably wildly wrong. I hope nothign relies on this.
+     */
+    if (samefields) {
+        VSMap *props = vsapi->getFramePropsRW(f);
+        frame top_f = d->d2v->frames[top];
+
+        vsapi->propSetInt(props, "_FieldBased",
+                          1 + !!(d->d2v->gops[top_f.gop].flags[top_f.offset] & FRAME_FLAG_TFF), paReplace);
+    }
+
     /* Stash our strides for convenience. */
     for(i = 0; i < 3; i++) {
         dst_stride[i]  = vsapi->getStride(f, i);
