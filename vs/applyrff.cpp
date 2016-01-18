@@ -63,7 +63,7 @@ const VSFrameRef *VS_CC rffGetFrame(int n, int activationReason, void **instance
             vsapi->requestFrameFilter(top, d->node, frameCtx);
         } else {
             vsapi->requestFrameFilter(min(top, bottom), d->node, frameCtx);
-            vsapi->requestFrameFilter(max(bottom, bottom), d->node, frameCtx);
+            vsapi->requestFrameFilter(max(top, bottom), d->node, frameCtx);
         }
         return NULL;
     }
