@@ -41,10 +41,10 @@ int VSGetBuffer(AVCodecContext *avctx, AVFrame *pic, int flag)
 
     if (!data->format_set) {
         switch(avctx->pix_fmt) {
-        case PIX_FMT_YUV420P:
+        case AV_PIX_FMT_YUV420P:
             data->vi.format = data->api->getFormatPreset(pfYUV420P8, data->core);
             break;
-        case PIX_FMT_YUV422P:
+        case AV_PIX_FMT_YUV422P:
             data->vi.format = data->api->getFormatPreset(pfYUV422P8, data->core);
             break;
         default:
