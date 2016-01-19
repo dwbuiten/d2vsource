@@ -229,7 +229,7 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
         data->vi.height = data->aligned_height;
     }
 
-    vsapi->createFilter(in, out, "d2vsource", d2vInit, d2vGetFrame, d2vFree, fmSerial, nfMakeLinear, data, core);
+    vsapi->createFilter(in, out, "d2vsource", d2vInit, d2vGetFrame, d2vFree, fmUnordered, nfMakeLinear, data, core);
 
     rff = !!vsapi->propGetInt(in, "rff", 0, &err);
     if (err)
