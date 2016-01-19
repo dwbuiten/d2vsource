@@ -162,7 +162,7 @@ void VS_CC rffCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
     int i;
 
     /* Allocate our private data. */
-    data = new rffData;
+    data = new(nothrow) rffData;
     if (!data) {
         vsapi->setError(out, "Cannot allocate private data.");
         return;
@@ -172,6 +172,7 @@ void VS_CC rffCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
     data->d2v = d2vparse((char *) vsapi->propGetData(in, "d2v", 0, 0), msg);
     if (!data->d2v) {
         vsapi->setError(out, msg.c_str());
+        delete data;
         return;
     }
 
