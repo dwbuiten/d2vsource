@@ -174,43 +174,57 @@ void VS_CC rffCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
     for(i = 0; i < data->vi.numFrames; i++) {
         frame f = data->d2v->frames[i];
         int rff = data->d2v->gops[f.gop].flags[f.offset] & FRAME_FLAG_RFF;
+        int tff = data->d2v->gops[f.gop].flags[f.offset] & FRAME_FLAG_TFF;
         int pos = data->frames.size() - 1;
 
+        int *pos_first, *pos_second, *ff_first, *ff_second;
+        if (tff) {
+            pos_first = &data->frames[pos].top;
+            pos_second = &data->frames[pos].bottom;
+            ff_first = &ff.top;
+            ff_second = &ff.bottom;
+        } else {
+            pos_first = &data->frames[pos].bottom;
+            pos_second = &data->frames[pos].top;
+            ff_first = &ff.bottom;
+            ff_second = &ff.top;
+        }
+
         if (rff) {
-            if (data->frames[pos].top == -1) {
-                data->frames[pos].top    = i;
-                data->frames[pos].bottom = i;
+            if (*pos_first == -1) {
+                *pos_first  = i;
+                *pos_second = i;
 
-                ff.top    = i;
-                ff.bottom = -1;
-            } else if (data->frames[pos].bottom == -1) {
-                data->frames[pos].bottom = i;
+                *ff_first  = i;
+                *ff_second = -1;
+            } else if (*pos_second == -1) {
+                *pos_second = i;
 
-                ff.top    = i;
-                ff.bottom = i;
+                *ff_first  = i;
+                *ff_second = i;
             } else {
-                ff.top    = i;
-                ff.bottom = i;
+                *ff_first  = i;
+                *ff_second = i;
 
                 data->frames.push_back(ff);
 
-                ff.bottom = -1;
+                *ff_second = -1;
             }
         } else {
-            if (data->frames[pos].top == -1) {
-                data->frames[pos].top    = i;
-                data->frames[pos].bottom = i;
+            if (*pos_first == -1) {
+                *pos_first  = i;
+                *pos_second = i;
 
-                ff.top    = -1;
-                ff.bottom = -1;
-            } else if (data->frames[pos].bottom == -1) {
-                data->frames[pos].bottom = i;
+                *ff_first  = -1;
+                *ff_second = -1;
+            } else if (*pos_second == -1) {
+                *pos_second = i;
 
-                ff.top    = i;
-                ff.bottom = -1;
+                *ff_first  = i;
+                *ff_second = -1;
             } else {
-                ff.top    = i;
-                ff.bottom = i;
+                *ff_first  = i;
+                *ff_second = i;
             }
         }
         data->frames.push_back(ff);
