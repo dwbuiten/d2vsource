@@ -78,6 +78,7 @@ On Windows (Visual Studio):
 
 On Linux, Mac OS X, or MinGW:
 
+    ./autogen.sh
     ./configure
     make
     make install
