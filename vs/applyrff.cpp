@@ -140,7 +140,6 @@ void VS_CC rffFree(void *instanceData, VSCore *core, const VSAPI *vsapi)
 void VS_CC rffCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, const VSAPI *vsapi)
 {
     rffData *data;
-    VSVideoInfo *vi;
     fieldFrame ff = { -1, -1 };
     string msg;
     int total_fields;
@@ -163,8 +162,7 @@ void VS_CC rffCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
 
     /* Get our frame info and copy it, so we can modify it after. */
     data->node = vsapi->propGetNode(in, "clip", 0, 0);
-    vi         = (VSVideoInfo *) vsapi->getVideoInfo(data->node);
-    data->vi   = *vi;
+    data->vi   = *vsapi->getVideoInfo(data->node);
 
     /*
      * Parse all the RFF flags to figure out which fields go
