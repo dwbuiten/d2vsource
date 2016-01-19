@@ -73,6 +73,7 @@ if test "$lt_cv_file_magic_cmd" = "func_win32_libid" ; then
     file_magic_cmd='$OBJDUMP -f'
 fi
 
+AS_IF([test "x$enable_static" = "xyes"], [AC_MSG_ERROR([d2vsource cannot function as a static library.])])
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
