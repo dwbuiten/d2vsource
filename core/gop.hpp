@@ -34,6 +34,7 @@ extern "C" {
 
 #define FRAME_FLAG_RFF 0x01
 #define FRAME_FLAG_TFF 0x02
+#define FRAME_FLAG_PROGRESSIVE 0x40
 
 using namespace std;
 

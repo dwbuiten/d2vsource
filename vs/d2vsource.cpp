@@ -113,6 +113,15 @@ const VSFrameRef *VS_CC d2vGetFrame(int n, int activationReason, void **instance
         break;
     }
 
+    int fieldbased;
+    if (d->d2v->gops[d->d2v->frames[n].gop].flags[d->d2v->frames[n].offset] & FRAME_FLAG_PROGRESSIVE)
+        fieldbased = 0;
+    else
+        fieldbased = 1 + !!(d->d2v->gops[d->d2v->frames[n].gop].flags[d->d2v->frames[n].offset] & FRAME_FLAG_TFF);
+    vsapi->propSetInt(props, "_FieldBased", fieldbased, paReplace);
+
+    vsapi->propSetInt(props, "_ChromaLocation", d->d2v->mpeg_type == 1 ? 1 : 0, paReplace);
+
     return f;
 }
 
