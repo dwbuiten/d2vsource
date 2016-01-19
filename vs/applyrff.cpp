@@ -106,20 +106,17 @@ const VSFrameRef *VS_CC rffGetFrame(int n, int activationReason, void **instance
     }
 
     /*
-     * Set progressive/interlaced flag.
-     *
-     * This assumes the d2v has been properly run through d2vfix,
-     * so that there is only one field order.
-     *
-     * This is probably wildly wrong. I hope nothign relies on this.
+     * Set field order.
      */
+    VSMap *props = vsapi->getFramePropsRW(f);
+    int fieldbased = 1;
     if (samefields) {
-        VSMap *props = vsapi->getFramePropsRW(f);
         frame top_f = d->d2v->frames[top];
-
-        vsapi->propSetInt(props, "_FieldBased",
-                          1 + !!(d->d2v->gops[top_f.gop].flags[top_f.offset] & FRAME_FLAG_TFF), paReplace);
+        fieldbased += !!(d->d2v->gops[top_f.gop].flags[top_f.offset] & FRAME_FLAG_TFF);
+    } else {
+        fieldbased += (top < bottom);
     }
+    vsapi->propSetInt(props, "_FieldBased", fieldbased, paReplace);
 
     vsapi->freeFrame(st);
     if (!samefields)
