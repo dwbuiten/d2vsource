@@ -43,11 +43,11 @@ void VS_CC rffInit(VSMap *in, VSMap *out, void **instanceData, VSNode *node, VSC
 const VSFrameRef *VS_CC rffGetFrame(int n, int activationReason, void **instanceData, void **frameData,
                                     VSFrameContext *frameCtx, VSCore *core, const VSAPI *vsapi)
 {
-    rffData *d = (rffData *) *instanceData;
-    VSFrameRef *st, *sb, *f;
+    const rffData *d = (const rffData *) *instanceData;
+    const VSFrameRef *st, *sb;
+    VSFrameRef *f;
     string msg;
     int top, bottom;
-    int dst_stride[3], srct_stride[3], srcb_stride[3];
     int i;
     bool samefields;
 
@@ -73,9 +73,37 @@ const VSFrameRef *VS_CC rffGetFrame(int n, int activationReason, void **instance
         return NULL;
 
     /* Source and destination frames. */
-    st = (VSFrameRef *) vsapi->getFrameFilter(top, d->node, frameCtx);
-    sb = samefields ? NULL : (VSFrameRef *) vsapi->getFrameFilter(bottom, d->node, frameCtx);
-    f  = vsapi->newVideoFrame(d->vi.format, d->vi.width, d->vi.height, NULL, core);
+    st = vsapi->getFrameFilter(top, d->node, frameCtx);
+    sb = samefields ? NULL : vsapi->getFrameFilter(bottom, d->node, frameCtx);
+
+    /* Copy into VS's buffers. */
+    if (samefields) {
+        f = vsapi->copyFrame(st, core);
+    } else {
+        int dst_stride[3], srct_stride[3], srcb_stride[3];
+
+        f  = vsapi->newVideoFrame(d->vi.format, d->vi.width, d->vi.height, NULL, core);
+
+        for (i = 0; i < d->vi.format->numPlanes; i++) {
+            dst_stride[i]  = vsapi->getStride(f, i);
+            srct_stride[i] = vsapi->getStride(st, i);
+            srcb_stride[i] = vsapi->getStride(sb, i);
+
+            uint8_t *dstp = vsapi->getWritePtr(f, i);
+            const uint8_t *srctp = vsapi->getReadPtr(st, i);
+            const uint8_t *srcbp = vsapi->getReadPtr(sb, i);
+            int width = vsapi->getFrameWidth(f, i);
+            int height = vsapi->getFrameHeight(f, i);
+
+            vs_bitblt(dstp, dst_stride[i] * 2,
+                      srctp, srct_stride[i] * 2,
+                      width * d->vi.format->bytesPerSample, height / 2);
+
+            vs_bitblt(dstp + dst_stride[i], dst_stride[i] * 2,
+                      srcbp + srcb_stride[i], srcb_stride[i] * 2,
+                      width * d->vi.format->bytesPerSample, height / 2);
+        }
+    }
 
     /*
      * Set progressive/interlaced flag.
@@ -91,49 +119,6 @@ const VSFrameRef *VS_CC rffGetFrame(int n, int activationReason, void **instance
 
         vsapi->propSetInt(props, "_FieldBased",
                           1 + !!(d->d2v->gops[top_f.gop].flags[top_f.offset] & FRAME_FLAG_TFF), paReplace);
-    }
-
-    /* Stash our strides for convenience. */
-    for(i = 0; i < 3; i++) {
-        dst_stride[i]  = vsapi->getStride(f, i);
-        srct_stride[i] = vsapi->getStride(st, i);
-        srcb_stride[i] = samefields ? 0 : vsapi->getStride(sb, i);
-    }
-
-    /* Copy into VS's buffers. */
-    if (samefields) {
-        /* Luma. */
-        vs_bitblt(vsapi->getWritePtr(f, 0), dst_stride[0], vsapi->getWritePtr(st, 0), srct_stride[0],
-                  d->vi.width, d->vi.height);
-
-        /* Chroma. */
-        vs_bitblt(vsapi->getWritePtr(f, 1), dst_stride[1], vsapi->getWritePtr(st, 1), srct_stride[1],
-                  d->vi.width >> d->vi.format->subSamplingW, d->vi.height >> d->vi.format->subSamplingH);
-        vs_bitblt(vsapi->getWritePtr(f, 2), dst_stride[2], vsapi->getWritePtr(st, 2), srct_stride[2],
-                  d->vi.width >> d->vi.format->subSamplingW, d->vi.height >> d->vi.format->subSamplingH);
-    } else {
-        /* Luma. */
-        vs_bitblt(vsapi->getWritePtr(f, 0), dst_stride[0] * 2,
-                  vsapi->getWritePtr(st, 0), srct_stride[0] * 2,
-                  d->vi.width, d->vi.height / 2);
-        vs_bitblt(vsapi->getWritePtr(f, 0) + dst_stride[0], dst_stride[0] * 2,
-                  vsapi->getWritePtr(sb, 0) + srcb_stride[0], srcb_stride[0] * 2,
-                  d->vi.width, d->vi.height / 2);
-
-        /* Chroma. */
-        vs_bitblt(vsapi->getWritePtr(f, 1), dst_stride[1] * 2,
-                  vsapi->getWritePtr(st, 1), srct_stride[1] * 2,
-                  d->vi.width >> d->vi.format->subSamplingW, (d->vi.height >> d->vi.format->subSamplingH) / 2);
-        vs_bitblt(vsapi->getWritePtr(f, 1) + dst_stride[1], dst_stride[1] * 2,
-                  vsapi->getWritePtr(sb, 1) + srcb_stride[1], srcb_stride[1] * 2,
-                  d->vi.width >> d->vi.format->subSamplingW, (d->vi.height >> d->vi.format->subSamplingH) / 2);
-
-        vs_bitblt(vsapi->getWritePtr(f, 2), dst_stride[2] * 2,
-                  vsapi->getWritePtr(st, 2), srct_stride[2] * 2,
-                  d->vi.width >> d->vi.format->subSamplingW, (d->vi.height >> d->vi.format->subSamplingH) / 2);
-        vs_bitblt(vsapi->getWritePtr(f, 2) + dst_stride[2], dst_stride[2] * 2,
-                  vsapi->getWritePtr(sb, 2) + srcb_stride[2], srcb_stride[2] * 2,
-                  d->vi.width >> d->vi.format->subSamplingW, (d->vi.height >> d->vi.format->subSamplingH) / 2);
     }
 
     vsapi->freeFrame(st);
