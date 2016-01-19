@@ -183,11 +183,11 @@ d2vcontext *d2vparse(const char *filename, string& err)
             ret->height = atoi(r.substr(pos + 1, r.length() - 1).c_str());
         } else if (l == "Frame_Rate") {
             size_t start = r.find("(") + 1;
-            size_t mid   = r.find("/");
+            size_t sep   = r.find("/");
             size_t end   = r.find(")");
 
-            ret->fps_num = atoi(r.substr(  start, mid).c_str());
-            ret->fps_den = atoi(r.substr(mid + 1, end).c_str());
+            ret->fps_num = atoi(r.substr(  start, sep).c_str());
+            ret->fps_den = atoi(r.substr(sep + 1, end).c_str());
         } else if (l == "Location") {
             size_t pos1 = r.find(",");
             size_t pos2 = r.find(",", pos1 + 1);
