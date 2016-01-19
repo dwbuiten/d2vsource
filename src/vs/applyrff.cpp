@@ -46,8 +46,10 @@ const VSFrameRef *VS_CC rffGetFrame(int n, int activationReason, void **instance
     const rffData *d = (const rffData *) *instanceData;
     const VSFrameRef *st, *sb;
     VSFrameRef *f;
+    VSMap *props;
     string msg;
     int top, bottom;
+    int fieldbased;
     int i;
     bool samefields;
 
@@ -105,14 +107,12 @@ const VSFrameRef *VS_CC rffGetFrame(int n, int activationReason, void **instance
         }
     }
 
-    /*
-     * Set field order.
-     */
-    VSMap *props = vsapi->getFramePropsRW(f);
-    int fieldbased = 1;
+    /* Set field order. */
+    props      = vsapi->getFramePropsRW(f);
+    fieldbased = 1;
     if (samefields) {
-        frame top_f = d->d2v->frames[top];
-        fieldbased += !!(d->d2v->gops[top_f.gop].flags[top_f.offset] & FRAME_FLAG_TFF);
+        frame top_f  = d->d2v->frames[top];
+        fieldbased  += !!(d->d2v->gops[top_f.gop].flags[top_f.offset] & FRAME_FLAG_TFF);
     } else {
         fieldbased += (top < bottom);
     }
