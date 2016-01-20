@@ -139,7 +139,6 @@ void VS_CC rffCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
     rffData *data;
     fieldFrame ff = { -1, -1 };
     string msg;
-    int total_fields;
     int i;
 
     /* Allocate our private data. */
@@ -166,7 +165,6 @@ void VS_CC rffCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
      * with which frames, and out total number of frames after
      * apply the RFF flags.
      */
-    total_fields = 0;
     data->frames.push_back(ff);
     for(i = 0; i < data->vi.numFrames; i++) {
         frame f = data->d2v->frames[i];
@@ -225,11 +223,9 @@ void VS_CC rffCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
             }
         }
         data->frames.push_back(ff);
-
-        total_fields += 2 + rff;
     }
 
-    data->vi.numFrames = total_fields / 2;
+    data->vi.numFrames = (int)data->frames.size();
 
     vsapi->createFilter(in, out, "applyrff", rffInit, rffGetFrame, rffFree, fmParallel, 0, data, core);
 }
