@@ -310,7 +310,7 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
              * that require of the previous GOP when the
              * first GOP is open.
              */
-            while(!(g.flags[n] & GOP_FLAG_PROGRESSIVE))
+            while(!(g.flags[n] & FRAME_FLAG_DECODABLE_WITHOUT_PREVIOUS_GOP))
                 n++;
 
             /*
@@ -347,7 +347,7 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
              */
             n = 0;
             if (!(g.info & GOP_FLAG_CLOSED))
-                while(!(g.flags[n] & GOP_FLAG_PROGRESSIVE))
+                while(!(g.flags[n] & FRAME_FLAG_DECODABLE_WITHOUT_PREVIOUS_GOP))
                     n++;
 
             offset += t.offset + 1 - n;
