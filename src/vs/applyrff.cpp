@@ -168,61 +168,86 @@ void VS_CC rffCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
     data->frames.push_back(ff);
     for(i = 0; i < data->vi.numFrames; i++) {
         frame f = data->d2v->frames[i];
-        int rff = data->d2v->gops[f.gop].flags[f.offset] & FRAME_FLAG_RFF;
-        int tff = data->d2v->gops[f.gop].flags[f.offset] & FRAME_FLAG_TFF;
+        int rff = !!(data->d2v->gops[f.gop].flags[f.offset] & FRAME_FLAG_RFF);
+        int tff = !!(data->d2v->gops[f.gop].flags[f.offset] & FRAME_FLAG_TFF);
         int pos = data->frames.size() - 1;
 
-        int *pos_first, *pos_second, *ff_first, *ff_second;
-        if (tff) {
-            pos_first = &data->frames[pos].top;
-            pos_second = &data->frames[pos].bottom;
-            ff_first = &ff.top;
-            ff_second = &ff.bottom;
-        } else {
-            pos_first = &data->frames[pos].bottom;
-            pos_second = &data->frames[pos].top;
-            ff_first = &ff.bottom;
-            ff_second = &ff.top;
-        }
+        int progressive_sequence = !!(data->d2v->gops[f.gop].info & GOP_FLAG_PROGRESSIVE_SEQUENCE);
 
-        if (rff) {
-            if (*pos_first == -1) {
-                *pos_first  = i;
-                *pos_second = i;
+        if (progressive_sequence) {
+            /*
+             * We repeat whole frames instead of fields, to turn one
+             * coded progressive frame into either two or three
+             * identical progressive frames.
+             */
+            ff.top = ff.bottom = i;
 
-                *ff_first  = i;
-                *ff_second = -1;
-            } else if (*pos_second == -1) {
-                *pos_second = i;
-
-                *ff_first  = i;
-                *ff_second = i;
-            } else {
-                *ff_first  = i;
-                *ff_second = i;
-
+            if (pos == 0)
+                data->frames[0] = ff;
+            else
                 data->frames.push_back(ff);
 
-                *ff_second = -1;
+            if (rff) {
+                data->frames.push_back(ff);
+
+                if (tff)
+                    data->frames.push_back(ff);
             }
         } else {
-            if (*pos_first == -1) {
-                *pos_first  = i;
-                *pos_second = i;
+            /* Sequence is not progressive. Repeat fields. */
 
-                *ff_first  = -1;
-                *ff_second = -1;
-            } else if (*pos_second == -1) {
-                *pos_second = i;
-
-                *ff_first  = i;
-                *ff_second = -1;
+            int *pos_first, *pos_second, *ff_first, *ff_second;
+            if (tff) {
+                pos_first = &data->frames[pos].top;
+                pos_second = &data->frames[pos].bottom;
+                ff_first = &ff.top;
+                ff_second = &ff.bottom;
             } else {
-                *ff_first  = i;
-                *ff_second = i;
+                pos_first = &data->frames[pos].bottom;
+                pos_second = &data->frames[pos].top;
+                ff_first = &ff.bottom;
+                ff_second = &ff.top;
             }
+
+            if (rff) {
+                if (*pos_first == -1) {
+                    *pos_first  = i;
+                    *pos_second = i;
+
+                    *ff_first  = i;
+                    *ff_second = -1;
+                } else if (*pos_second == -1) {
+                    *pos_second = i;
+
+                    *ff_first  = i;
+                    *ff_second = i;
+                } else {
+                    *ff_first  = i;
+                    *ff_second = i;
+
+                    data->frames.push_back(ff);
+
+                    *ff_second = -1;
+                }
+            } else {
+                if (*pos_first == -1) {
+                    *pos_first  = i;
+                    *pos_second = i;
+
+                    *ff_first  = -1;
+                    *ff_second = -1;
+                } else if (*pos_second == -1) {
+                    *pos_second = i;
+
+                    *ff_first  = i;
+                    *ff_second = -1;
+                } else {
+                    *ff_first  = i;
+                    *ff_second = i;
+                }
+            }
+            data->frames.push_back(ff);
         }
-        data->frames.push_back(ff);
     }
 
     data->vi.numFrames = (int)data->frames.size();
