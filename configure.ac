@@ -1,4 +1,4 @@
-AC_INIT([D2VSource], [beta8], [https://github.com/dwbuiten/d2vsource/issues], [D2VSource], [https://github.com/dwbuiten/d2vsource/])
+AC_INIT([d2vsource], [beta8], [https://github.com/dwbuiten/d2vsource/issues], [d2vsource], [https://github.com/dwbuiten/d2vsource/])
 
 : ${CXXFLAGS=""}
 
