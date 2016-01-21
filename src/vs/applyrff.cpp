@@ -167,10 +167,10 @@ void VS_CC rffCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
      */
     data->frames.push_back(ff);
     for(i = 0; i < data->vi.numFrames; i++) {
-        frame f = data->d2v->frames[i];
-        int rff = !!(data->d2v->gops[f.gop].flags[f.offset] & FRAME_FLAG_RFF);
-        int tff = !!(data->d2v->gops[f.gop].flags[f.offset] & FRAME_FLAG_TFF);
-        int pos = data->frames.size() - 1;
+        frame f  = data->d2v->frames[i];
+        bool rff = !!(data->d2v->gops[f.gop].flags[f.offset] & FRAME_FLAG_RFF);
+        bool tff = !!(data->d2v->gops[f.gop].flags[f.offset] & FRAME_FLAG_TFF);
+        int pos  = data->frames.size() - 1;
 
         int progressive_sequence = !!(data->d2v->gops[f.gop].info & GOP_FLAG_PROGRESSIVE_SEQUENCE);
 
