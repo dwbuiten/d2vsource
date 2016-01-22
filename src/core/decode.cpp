@@ -479,10 +479,12 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
         }
 
         /*
-         * Handle the last frame of the file, which is tramsitted
-         * with one frame of latency in libavcodec.
+         * Handle the last few frames of the file, which may be transmitted
+         * with some latency in libavcodec.
          */
-        if ((unsigned int) frame_num == ctx->frames.size() - 1 && j == o) {
+        int latency = dctx->avctx->has_b_frames + dctx->avctx->delay;
+
+        if ((unsigned int) frame_num > ctx->frames.size() - 1 - latency && j > o - latency) {
             av_packet_unref(&dctx->inpkt);
             avcodec_decode_video2(dctx->avctx, out, &av_ret, &dctx->inpkt);
             break;
