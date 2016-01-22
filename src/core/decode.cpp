@@ -441,7 +441,7 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
      * Set it to the stream that matches our MPEG-TS PID if applicable.
      */
     if (dctx->stream_index == -1) {
-        if (ctx->ts_pid) {
+        if (ctx->ts_pid > 0) {
             for(i = 0; i < dctx->fctx->nb_streams; i++)
                 if (dctx->fctx->streams[i]->id == ctx->ts_pid)
                     break;
@@ -452,7 +452,7 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
         }
 
         if (i >= dctx->fctx->nb_streams) {
-            if (ctx->ts_pid)
+            if (ctx->ts_pid > 0)
                 err = "PID does not exist in source file.";
             else
                 err = "No video stream found.";
