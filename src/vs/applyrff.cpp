@@ -250,7 +250,7 @@ void VS_CC rffCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
         }
     }
 
-    data->vi.numFrames = (int)data->frames.size();
+    data->vi.numFrames = (int)data->frames.size() - 1;
 
     vsapi->createFilter(in, out, "applyrff", rffInit, rffGetFrame, rffFree, fmParallel, 0, data, core);
 }
