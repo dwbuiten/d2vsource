@@ -212,8 +212,8 @@ d2vcontext *d2vparse(const char *filename, string& err)
     } else if (ret->mpeg_type != 1 && ret->mpeg_type != 2) {
         err = "Invalid MPEG type in D2V header.";
         goto fail;
-    } else if (ret->width <= 0 || ret->width <= 0) {
-        err = "Invalid dimentions in D2V header.";
+    } else if (ret->width <= 0 || ret->height <= 0) {
+        err = "Invalid dimensions in D2V header.";
         goto fail;
     } else if (ret->stream_type == TRANSPORT && ret->ts_pid < 0) {
         err = "Invalid PID in D2V header.";
