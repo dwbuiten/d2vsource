@@ -221,8 +221,8 @@ d2vcontext *d2vparse(const char *filename, string& err)
     } else if (ret->stream_type == UNSET) {
         err = "Invalid stream type in D2V header.";
         goto fail;
-    } else if (ret->loc.startfile < 0 || ret->loc.startoffset < ret->loc.startfile ||
-               ret->loc.endfile < ret->loc.startoffset || ret->loc.endoffset > ret->loc.endfile) {
+    } else if (ret->loc.startfile < 0 || ret->loc.startoffset < 0 ||
+               ret->loc.endfile < ret->loc.startfile || ret->loc.endoffset < ret->loc.startoffset) {
         err = "Invalid location in D2V header.";
         goto fail;
     }
