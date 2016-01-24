@@ -473,6 +473,8 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
     /* If we're decoding linearly, there is obviously no offset. */
     o = next ? 0 : offset;
     for(j = 0; j <= o; j++) {
+        int latency;
+
         while(dctx->inpkt.stream_index != dctx->stream_index) {
             av_packet_unref(&dctx->inpkt);
             av_read_frame(dctx->fctx, &dctx->inpkt);
@@ -482,7 +484,7 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
          * Handle the last few frames of the file, which may be transmitted
          * with some latency in libavcodec.
          */
-        int latency = dctx->avctx->has_b_frames + dctx->avctx->delay;
+        latency = dctx->avctx->has_b_frames + dctx->avctx->delay;
 
         if ((unsigned int) frame_num > ctx->frames.size() - 1 - latency && j > o - latency) {
             av_packet_unref(&dctx->inpkt);
