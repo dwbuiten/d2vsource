@@ -43,10 +43,12 @@ const VSFrameRef *VS_CC d2vGetFrame(int n, int activationReason, void **instance
                                     VSFrameContext *frameCtx, VSCore *core, const VSAPI *vsapi)
 {
     d2vData *d = (d2vData *) *instanceData;
-    VSFrameRef *s, *f;
+    const VSFrameRef *s;
+    VSFrameRef *f;
     VSMap *props;
     string msg;
     int ret;
+    int plane;
 
     /* Unreference the previously decoded frame. */
     av_frame_unref(d->frame);
@@ -58,7 +60,7 @@ const VSFrameRef *VS_CC d2vGetFrame(int n, int activationReason, void **instance
     }
 
     /* Grab our direct-rendered frame. */
-    s = (VSFrameRef *) d->frame->opaque;
+    s = (const VSFrameRef *) d->frame->opaque;
     if (!s) {
         vsapi->setFilterError("Seek pattern broke d2vsource! Please send a sample.", frameCtx);
         return NULL;
@@ -66,19 +68,22 @@ const VSFrameRef *VS_CC d2vGetFrame(int n, int activationReason, void **instance
 
     /* If our width and height are the same, just return it. */
     if (d->vi.width == d->aligned_width && d->vi.height == d->aligned_height) {
-        f = (VSFrameRef *) vsapi->cloneFrameRef(s);
-        return f;
+        f = vsapi->copyFrame(s, core);
+    } else {
+        f = vsapi->newVideoFrame(d->vi.format, d->vi.width, d->vi.height, NULL, core);
+
+        /* Copy into VS's buffers. */
+        for (plane = 0; plane < d->vi.format->numPlanes; plane++) {
+            uint8_t *dstp = vsapi->getWritePtr(f, plane);
+            const uint8_t *srcp = vsapi->getReadPtr(s, plane);
+            int dst_stride = vsapi->getStride(f, plane);
+            int src_stride = vsapi->getStride(s, plane);
+            int width = vsapi->getFrameWidth(f, plane);
+            int height = vsapi->getFrameHeight(f, plane);
+
+            vs_bitblt(dstp, dst_stride, srcp, src_stride, width * d->vi.format->bytesPerSample, height);
+        }
     }
-
-    f = vsapi->newVideoFrame(d->vi.format, d->vi.width, d->vi.height, NULL, core);
-
-    /* Copy into VS's buffers. */
-    vs_bitblt(vsapi->getWritePtr(f, 0), vsapi->getStride(f, 0), vsapi->getWritePtr(s, 0), vsapi->getStride(s, 0),
-              d->vi.width, d->vi.height);
-    vs_bitblt(vsapi->getWritePtr(f, 1), vsapi->getStride(f, 1), vsapi->getWritePtr(s, 1), vsapi->getStride(s, 1),
-              d->vi.width >> d->vi.format->subSamplingW, d->vi.height >> d->vi.format->subSamplingH);
-    vs_bitblt(vsapi->getWritePtr(f, 2), vsapi->getStride(f, 2), vsapi->getWritePtr(s, 2), vsapi->getStride(s, 2),
-              d->vi.width >> d->vi.format->subSamplingW, d->vi.height >> d->vi.format->subSamplingH);
 
     props = vsapi->getFramePropsRW(f);
 
