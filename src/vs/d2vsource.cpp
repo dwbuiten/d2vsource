@@ -99,10 +99,14 @@ const VSFrameRef *VS_CC d2vGetFrame(int n, int activationReason, void **instance
     vsapi->propSetFloat(props, "_AbsoluteTime",
                         (static_cast<double>(d->d2v->fps_den) * n) / static_cast<double>(d->d2v->fps_num), paReplace);
 
+    /*
+     * YUVRGB_Scale describes the output range.
+     * _ColorRange describes the input range.
+     */
     if (d->d2v->yuvrgb_scale == PC)
-        vsapi->propSetInt(props, "_ColorRange", 0, paReplace);
-    else if (d->d2v->yuvrgb_scale == TV)
         vsapi->propSetInt(props, "_ColorRange", 1, paReplace);
+    else if (d->d2v->yuvrgb_scale == TV)
+        vsapi->propSetInt(props, "_ColorRange", 0, paReplace);
 
     switch (d->frame->pict_type) {
     case AV_PICTURE_TYPE_I:
