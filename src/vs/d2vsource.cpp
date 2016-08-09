@@ -192,7 +192,6 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
     data->dec->avctx->opaque         = (void *) data;
     data->dec->avctx->get_buffer2    = VSGetBuffer;
 
-    /* Last frame is crashy right now. */
     data->vi.numFrames = data->d2v->frames.size();
     data->vi.width     = data->d2v->width;
     data->vi.height    = data->d2v->height;
