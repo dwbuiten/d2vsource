@@ -281,11 +281,6 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
         if (error) {
             vsapi->setError(out, error);
             vsapi->freeMap(ret);
-            d2vfreep(&data->d2v);
-            decodefreep(&data->dec);
-            av_frame_unref(data->frame);
-            av_freep(&data->frame);
-            free(data);
             return;
         }
 
