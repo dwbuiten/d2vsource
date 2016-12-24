@@ -192,7 +192,6 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
     data->dec->avctx->opaque         = (void *) data;
     data->dec->avctx->get_buffer2    = VSGetBuffer;
 
-    /* Last frame is crashy right now. */
     data->vi.numFrames = data->d2v->frames.size();
     data->vi.width     = data->d2v->width;
     data->vi.height    = data->d2v->height;
@@ -282,11 +281,6 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
         if (error) {
             vsapi->setError(out, error);
             vsapi->freeMap(ret);
-            d2vfreep(&data->d2v);
-            decodefreep(&data->dec);
-            av_frame_unref(data->frame);
-            av_freep(&data->frame);
-            free(data);
             return;
         }
 
