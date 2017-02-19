@@ -88,7 +88,13 @@ const VSFrameRef *VS_CC rffGetFrame(int n, int activationReason, void **instance
     } else {
         int dst_stride[3], srct_stride[3], srcb_stride[3];
 
-        f  = vsapi->newVideoFrame(d->vi.format, d->vi.width, d->vi.height, NULL, core);
+        /*
+         * Copy properties from the first field's source frame.
+         * Some of them will be wrong for this frame, but ¯\_(ツ)_/¯.
+        */
+        const VSFrameRef *prop_src = bottom_field < top_field ? sb : st;
+
+        f  = vsapi->newVideoFrame(d->vi.format, d->vi.width, d->vi.height, prop_src, core);
 
         for (i = 0; i < d->vi.format->numPlanes; i++) {
             dst_stride[i]  = vsapi->getStride(f, i);
