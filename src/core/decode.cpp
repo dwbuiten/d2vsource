@@ -212,9 +212,9 @@ decodecontext *decodeinit(d2vcontext *dctx, int threads, string& err)
      * Ideally, to create a smaller binary, we only enable the
      * following:
      *
-     * Demuxers: mpegvideo, mpegps, mpegts.
-     * Parsers: mpegvideo, mpegaudio.
-     * Decoders: mpeg1video, mpeg2video.
+     * Demuxers: mpegvideo, mpegps, mpegts, h264.
+     * Parsers: mpegvideo, mpegaudio, h264.
+     * Decoders: mpeg1video, mpeg2video, h264.
      */
     avcodec_register_all();
     av_register_all();
@@ -224,6 +224,8 @@ decodecontext *decodeinit(d2vcontext *dctx, int threads, string& err)
         ret->incodec = avcodec_find_decoder(AV_CODEC_ID_MPEG1VIDEO);
     } else if (dctx->mpeg_type == 2) {
         ret->incodec = avcodec_find_decoder(AV_CODEC_ID_MPEG2VIDEO);
+    } else if (dctx->mpeg_type == 264) {
+        ret->incodec = avcodec_find_decoder(AV_CODEC_ID_H264);
     } else {
         err = "Invalid MPEG Type.";
         goto fail;
@@ -391,8 +393,13 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
          * we open the demuxer with our custom AVIO context.
          */
         if (ctx->stream_type == ELEMENTARY) {
-            dctx->fctx->iformat = av_find_input_format("mpegvideo");
-            *dctx->fakename      = "fakevideo.m2v";
+            if (ctx->mpeg_type == 264) {
+                dctx->fctx->iformat = av_find_input_format("h264");
+                *dctx->fakename  = "fakevideo.h264";
+            } else {
+                dctx->fctx->iformat = av_find_input_format("mpegvideo");
+                *dctx->fakename  = "fakevideo.m2v";
+            }
         } else if (ctx->stream_type == PROGRAM) {
             dctx->fctx->iformat = av_find_input_format("mpeg");
             *dctx->fakename      = "fakevideo.vob";

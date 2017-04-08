@@ -180,10 +180,16 @@ void VS_CC rffCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
         frame f  = data->d2v->frames[i];
         bool rff = !!(data->d2v->gops[f.gop].flags[f.offset] & FRAME_FLAG_RFF);
         bool tff = !!(data->d2v->gops[f.gop].flags[f.offset] & FRAME_FLAG_TFF);
+        bool progressive_frame = !!(data->d2v->gops[f.gop].flags[f.offset] & FRAME_FLAG_PROGRESSIVE);
 
-        int progressive_sequence = !!(data->d2v->gops[f.gop].info & GOP_FLAG_PROGRESSIVE_SEQUENCE);
+        bool progressive_sequence = !!(data->d2v->gops[f.gop].info & GOP_FLAG_PROGRESSIVE_SEQUENCE);
 
-        if (progressive_sequence) {
+        /*
+         * In MPEG2 frame doubling and tripling happens only in progressive sequences.
+         * H264 has no such thing, apparently, but frames still have to be progressive.
+         */
+        if (progressive_sequence ||
+            (progressive_frame && data->d2v->mpeg_type == 264)) {
             /*
              * We repeat whole frames instead of fields, to turn one
              * coded progressive frame into either two or three
@@ -202,7 +208,7 @@ void VS_CC rffCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
                 }
             }
         } else {
-            /* Sequence is not progressive. Repeat fields. */
+            /* Repeat fields. */
 
             data->fields.push_back({ i, tff ? Top : Bottom });
             data->fields.push_back({ i, tff ? Bottom : Top });
