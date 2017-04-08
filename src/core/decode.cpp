@@ -473,47 +473,13 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
     /* If we're decoding linearly, there is obviously no offset. */
     o = next ? 0 : offset;
     for(j = 0; j <= o; j++) {
-        int latency;
-
         while(dctx->inpkt.stream_index != dctx->stream_index) {
             av_packet_unref(&dctx->inpkt);
             av_read_frame(dctx->fctx, &dctx->inpkt);
         }
 
-        /*
-         * Handle the last few frames of the file, which may be transmitted
-         * with some latency in libavcodec.
-         */
-        latency = dctx->avctx->has_b_frames + dctx->avctx->delay;
-
-        if ((unsigned int) frame_num > ctx->frames.size() - 1 - latency && j > o - latency) {
-            av_packet_unref(&dctx->inpkt);
-            avcodec_decode_video2(dctx->avctx, out, &av_ret, &dctx->inpkt);
-            break;
-        }
-
-        /*
-         * Loop until we have a whole frame, since there can be
-         * multi-packet frames.
-         */
-        av_ret = 0;
-        while(!av_ret) {
-            AVPacket orig = dctx->inpkt;
-
-            /*
-             * Decoding might not consume out whole packet, so
-             * stash the original packet info, loop until it
-             * is all consumed, and then restore it, it so
-             * we can free it properly.
-             */
-            while(dctx->inpkt.size > 0) {
-                int r = avcodec_decode_video2(dctx->avctx, out, &av_ret, &dctx->inpkt);
-
-                dctx->inpkt.size -= r;
-                dctx->inpkt.data += r;
-            }
-
-            dctx->inpkt = orig;
+        while (avcodec_receive_frame(dctx->avctx, out) == AVERROR(EAGAIN)) {
+            avcodec_send_packet(dctx->avctx, &dctx->inpkt);
 
             do {
                 av_packet_unref(&dctx->inpkt);
