@@ -189,26 +189,35 @@ void VS_CC rffCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
              * coded progressive frame into either two or three
              * identical progressive frames.
              */
-            data->fields.push_back({ i, Progressive });
-            data->fields.push_back({ i, Progressive });
+            rffField field;
+            field.frame = i;
+            field.type = Progressive;
+
+            data->fields.push_back(field);
+            data->fields.push_back(field);
 
             if (rff) {
-                data->fields.push_back({ i, Progressive });
-                data->fields.push_back({ i, Progressive });
+                data->fields.push_back(field);
+                data->fields.push_back(field);
 
                 if (tff) {
-                    data->fields.push_back({ i, Progressive });
-                    data->fields.push_back({ i, Progressive });
+                    data->fields.push_back(field);
+                    data->fields.push_back(field);
                 }
             }
         } else {
             /* Sequence is not progressive. Repeat fields. */
 
-            data->fields.push_back({ i, tff ? Top : Bottom });
-            data->fields.push_back({ i, tff ? Bottom : Top });
+            rffField first_field, second_field;
+            first_field.frame = second_field.frame = i;
+            first_field.type = tff ? Top : Bottom;
+            second_field.type = tff ? Bottom : Top;
+
+            data->fields.push_back(first_field);
+            data->fields.push_back(second_field);
 
             if (rff)
-                data->fields.push_back({ i, tff ? Top : Bottom });
+                data->fields.push_back(first_field);
         }
     }
 
