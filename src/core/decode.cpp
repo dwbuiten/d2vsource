@@ -216,8 +216,7 @@ decodecontext *decodeinit(d2vcontext *dctx, int threads, string& err)
      * Parsers: mpegvideo, mpegaudio.
      * Decoders: mpeg1video, mpeg2video.
      */
-    avcodec_register_all();
-    av_register_all();
+    /* API calls no longer needed, but comment left for info purposes. */
 
     /* Set the correct decoder. */
     if (dctx->mpeg_type == 1) {
