@@ -68,7 +68,7 @@ static const int idct_algo_conv[8] = {
     FF_IDCT_AUTO,
     FF_IDCT_AUTO,
     FF_IDCT_AUTO,
-    FF_IDCT_XVIDMMX,
+    FF_IDCT_XVID,
     FF_IDCT_SIMPLEMMX
 };
 

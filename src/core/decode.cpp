@@ -242,12 +242,6 @@ decodecontext *decodeinit(d2vcontext *dctx, int threads, string& err)
     /* Set the thread count. */
     ret->avctx->thread_count = threads;
 
-    /*
-     * Enable EMU_EDGE so that we can use buffers that are
-     * not padded by 32 pixels.
-     */
-    ret->avctx->flags |= CODEC_FLAG_EMU_EDGE;
-
     /* Use refcounted frames. */
     ret->avctx->refcounted_frames = 1;
 
