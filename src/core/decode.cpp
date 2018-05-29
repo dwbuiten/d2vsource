@@ -440,7 +440,7 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
                     break;
         } else {
             for(i = 0; i < dctx->fctx->nb_streams; i++)
-                if (dctx->fctx->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO)
+                if (dctx->fctx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO)
                     break;
         }
 
