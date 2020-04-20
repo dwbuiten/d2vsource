@@ -104,9 +104,9 @@ const VSFrameRef *VS_CC d2vGetFrame(int n, int activationReason, void **instance
      * _ColorRange describes the input range.
      */
     if (d->d2v->yuvrgb_scale == PC)
-        vsapi->propSetInt(props, "_ColorRange", 1, paReplace);
-    else if (d->d2v->yuvrgb_scale == TV)
         vsapi->propSetInt(props, "_ColorRange", 0, paReplace);
+    else if (d->d2v->yuvrgb_scale == TV)
+        vsapi->propSetInt(props, "_ColorRange", 1, paReplace);
 
     switch (d->frame->pict_type) {
     case AV_PICTURE_TYPE_I:
