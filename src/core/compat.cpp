@@ -38,7 +38,7 @@ void d2vgetline(FILE *f, string& str)
             break;
 
         if (ch == '\n') {
-            if (str[str.size() - 1] == '\r')
+            if (str.size() && str[str.size() - 1] == '\r')
                 str.erase(str.size() - 1, 1);
             break;
         }
