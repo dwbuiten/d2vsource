@@ -212,9 +212,9 @@ decodecontext *decodeinit(d2vcontext *dctx, int threads, string& err)
      * Ideally, to create a smaller binary, we only enable the
      * following:
      *
-     * Demuxers: mpegvideo, mpegps, mpegts.
-     * Parsers: mpegvideo, mpegaudio.
-     * Decoders: mpeg1video, mpeg2video.
+     * Demuxers: mpegvideo, mpegps, mpegts, h264.
+     * Parsers: mpegvideo, mpegaudio, h264.
+     * Decoders: mpeg1video, mpeg2video, h264.
      */
     /* API calls no longer needed, but comment left for info purposes. */
 
@@ -223,6 +223,8 @@ decodecontext *decodeinit(d2vcontext *dctx, int threads, string& err)
         ret->incodec = avcodec_find_decoder(AV_CODEC_ID_MPEG1VIDEO);
     } else if (dctx->mpeg_type == 2) {
         ret->incodec = avcodec_find_decoder(AV_CODEC_ID_MPEG2VIDEO);
+    } else if (dctx->mpeg_type == 264) {
+        ret->incodec = avcodec_find_decoder(AV_CODEC_ID_H264);
     } else {
         err = "Invalid MPEG Type.";
         goto fail;
@@ -384,8 +386,13 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
          * we open the demuxer with our custom AVIO context.
          */
         if (ctx->stream_type == ELEMENTARY) {
-            dctx->fctx->iformat = av_find_input_format("mpegvideo");
-            *dctx->fakename      = "fakevideo.m2v";
+            if (ctx->mpeg_type == 264) {
+                dctx->fctx->iformat = av_find_input_format("h264");
+                *dctx->fakename  = "fakevideo.h264";
+            } else {
+                dctx->fctx->iformat = av_find_input_format("mpegvideo");
+                *dctx->fakename  = "fakevideo.m2v";
+            }
         } else if (ctx->stream_type == PROGRAM) {
             dctx->fctx->iformat = av_find_input_format("mpeg");
             *dctx->fakename      = "fakevideo.vob";
@@ -466,47 +473,13 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
     /* If we're decoding linearly, there is obviously no offset. */
     o = next ? 0 : offset;
     for(j = 0; j <= o; j++) {
-        int latency;
-
         while(dctx->inpkt.stream_index != dctx->stream_index) {
             av_packet_unref(&dctx->inpkt);
             av_read_frame(dctx->fctx, &dctx->inpkt);
         }
 
-        /*
-         * Handle the last few frames of the file, which may be transmitted
-         * with some latency in libavcodec.
-         */
-        latency = dctx->avctx->has_b_frames + dctx->avctx->delay;
-
-        if ((unsigned int) frame_num > ctx->frames.size() - 1 - latency && j > o - latency) {
-            av_packet_unref(&dctx->inpkt);
-            avcodec_decode_video2(dctx->avctx, out, &av_ret, &dctx->inpkt);
-            break;
-        }
-
-        /*
-         * Loop until we have a whole frame, since there can be
-         * multi-packet frames.
-         */
-        av_ret = 0;
-        while(!av_ret) {
-            AVPacket orig = dctx->inpkt;
-
-            /*
-             * Decoding might not consume out whole packet, so
-             * stash the original packet info, loop until it
-             * is all consumed, and then restore it, it so
-             * we can free it properly.
-             */
-            while(dctx->inpkt.size > 0) {
-                int r = avcodec_decode_video2(dctx->avctx, out, &av_ret, &dctx->inpkt);
-
-                dctx->inpkt.size -= r;
-                dctx->inpkt.data += r;
-            }
-
-            dctx->inpkt = orig;
+        while (avcodec_receive_frame(dctx->avctx, out) == AVERROR(EAGAIN)) {
+            avcodec_send_packet(dctx->avctx, &dctx->inpkt);
 
             do {
                 av_packet_unref(&dctx->inpkt);

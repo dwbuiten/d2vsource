@@ -120,7 +120,7 @@ d2vcontext *d2vparse(const char *filename, string& err)
 
     /* Check the DGIndexProjectFile version. */
     d2vgetline(input, line);
-    if (line.substr(18, 2) != D2V_VERSION) {
+    if (line.substr(18, 2) != D2V_VERSION && line.substr(18, 2) != "42") {
         err = "D2V Version is unsupported!";
         goto fail;
     }
@@ -209,7 +209,7 @@ d2vcontext *d2vparse(const char *filename, string& err)
     if (ret->fps_num <= 0 || ret->fps_den <= 0) {
         err = "Invalid framerate in D2V header.";
         goto fail;
-    } else if (ret->mpeg_type != 1 && ret->mpeg_type != 2) {
+    } else if (ret->mpeg_type != 1 && ret->mpeg_type != 2 && ret->mpeg_type != 264) {
         err = "Invalid MPEG type in D2V header.";
         goto fail;
     } else if (ret->width <= 0 || ret->height <= 0) {
