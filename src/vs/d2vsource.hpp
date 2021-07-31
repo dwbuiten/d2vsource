@@ -35,7 +35,7 @@ typedef struct d2vData {
     AVFrame *frame;
     VSVideoInfo vi;
     VSCore *core;
-    VSAPI *api;
+    const VSAPI *api;
 
     int aligned_height;
     int aligned_width;

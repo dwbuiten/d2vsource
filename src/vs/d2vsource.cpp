@@ -154,7 +154,7 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
     int err;
 
     /* Need to get thread info before anything to pass to decodeinit(). */
-    threads = vsapi->propGetInt(in, "threads", 0, &err);
+    threads = int64ToIntS(vsapi->propGetInt(in, "threads", 0, &err));
     if (err)
         threads = 0;
 
@@ -170,7 +170,7 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
         return;
     }
 
-    data->d2v = d2vparse((char *) vsapi->propGetData(in, "input", 0, 0), msg);
+    data->d2v = d2vparse(vsapi->propGetData(in, "input", 0, 0), msg);
     if (!data->d2v) {
         vsapi->setError(out, msg.c_str());
         free(data);
@@ -192,7 +192,7 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
     data->dec->avctx->opaque         = (void *) data;
     data->dec->avctx->get_buffer2    = VSGetBuffer;
 
-    data->vi.numFrames = data->d2v->frames.size();
+    data->vi.numFrames = (int) data->d2v->frames.size();
     data->vi.width     = data->d2v->width;
     data->vi.height    = data->d2v->height;
     data->vi.fpsNum    = data->d2v->fps_num;
@@ -200,7 +200,7 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
 
     /* Stash the pointer to our core. */
     data->core = core;
-    data->api  = (VSAPI *) vsapi;
+    data->api  = vsapi;
 
     /*
      * Stash our aligned width and height for use with our

@@ -36,10 +36,10 @@ typedef struct decodecontext {
 
     AVCodecContext *avctx;
     AVFormatContext *fctx;
-    AVCodec *incodec;
+    const AVCodec *incodec;
     string *fakename;
 
-    AVPacket inpkt;
+    AVPacket *inpkt;
 
     int stream_index;
 

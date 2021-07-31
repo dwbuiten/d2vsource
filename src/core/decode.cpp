@@ -130,7 +130,7 @@ void decodefreep(decodecontext **ctx)
         return;
 
     av_freep(&lctx->in);
-    av_packet_unref(&lctx->inpkt);
+    av_packet_free(&lctx->inpkt);
 
     if (lctx->fctx) {
         if (lctx->fctx->pb)
@@ -243,9 +243,6 @@ decodecontext *decodeinit(d2vcontext *dctx, int threads, string& err)
     /* Set the thread count. */
     ret->avctx->thread_count = threads;
 
-    /* Use refcounted frames. */
-    ret->avctx->refcounted_frames = 1;
-
     /* Open it. */
     av_ret = avcodec_open2(ret->avctx, ret->incodec, NULL);
     if (av_ret < 0) {
@@ -257,6 +254,12 @@ decodecontext *decodeinit(d2vcontext *dctx, int threads, string& err)
     ret->in = (uint8_t *) av_malloc(32 * 1024);
     if (!ret->in) {
         err = "Cannot alloc inbuf.";
+        goto fail;
+    }
+
+    ret->inpkt = av_packet_alloc();
+    if (!ret->inpkt) {
+        err = "Cannot alloc packet.";
         goto fail;
     }
 
@@ -432,8 +435,7 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
         avformat_find_stream_info(dctx->fctx, NULL);
 
         /* Free and re-initialize any existing packet. */
-        av_packet_unref(&dctx->inpkt);
-        av_init_packet(&dctx->inpkt);
+        av_packet_unref(dctx->inpkt);
     }
 
     /*
@@ -468,23 +470,23 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
      * linearly, since it's still there from the previous iteration.
      */
     if (!next)
-        av_read_frame(dctx->fctx, &dctx->inpkt);
+        av_read_frame(dctx->fctx, dctx->inpkt);
 
     /* If we're decoding linearly, there is obviously no offset. */
     o = next ? 0 : offset;
     for(j = 0; j <= o; j++) {
-        while(dctx->inpkt.stream_index != dctx->stream_index) {
-            av_packet_unref(&dctx->inpkt);
-            av_read_frame(dctx->fctx, &dctx->inpkt);
+        while(dctx->inpkt->stream_index != dctx->stream_index) {
+            av_packet_unref(dctx->inpkt);
+            av_read_frame(dctx->fctx, dctx->inpkt);
         }
 
         while (avcodec_receive_frame(dctx->avctx, out) == AVERROR(EAGAIN)) {
-            avcodec_send_packet(dctx->avctx, &dctx->inpkt);
+            avcodec_send_packet(dctx->avctx, dctx->inpkt);
 
             do {
-                av_packet_unref(&dctx->inpkt);
-                av_read_frame(dctx->fctx, &dctx->inpkt);
-            } while(dctx->inpkt.stream_index != dctx->stream_index);
+                av_packet_unref(dctx->inpkt);
+                av_read_frame(dctx->fctx, dctx->inpkt);
+            } while(dctx->inpkt->stream_index != dctx->stream_index);
         }
 
         /* Unreference all but the last frame. */
