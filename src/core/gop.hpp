@@ -24,10 +24,8 @@
 #define GOP_H
 
 #include <vector>
+#include <cstdint>
 
-extern "C" {
-#include <stdint.h>
-}
 
 #define GOP_FLAG_I_PICTURE_STARTS_NEW_GOP 0x100
 #define GOP_FLAG_PROGRESSIVE_SEQUENCE 0x200

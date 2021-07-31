@@ -20,10 +20,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-extern "C" {
-#include <stdint.h>
-#include <stdlib.h>
-}
+#include <cstdint>
+#include <cstdlib>
 
 #include <VapourSynth.h>
 #include <VSHelper.h>
@@ -33,13 +31,13 @@ extern "C" {
 #include "decode.hpp"
 #include "directrender.hpp"
 
-void VS_CC d2vInit(VSMap *in, VSMap *out, void **instanceData, VSNode *node, VSCore *core, const VSAPI *vsapi)
+static void VS_CC d2vInit(VSMap *in, VSMap *out, void **instanceData, VSNode *node, VSCore *core, const VSAPI *vsapi)
 {
     d2vData *d = (d2vData *) *instanceData;
     vsapi->setVideoInfo(&d->vi, 1, node);
 }
 
-const VSFrameRef *VS_CC d2vGetFrame(int n, int activationReason, void **instanceData, void **frameData,
+static const VSFrameRef *VS_CC d2vGetFrame(int n, int activationReason, void **instanceData, void **frameData,
                                     VSFrameContext *frameCtx, VSCore *core, const VSAPI *vsapi)
 {
     d2vData *d = (d2vData *) *instanceData;
@@ -134,14 +132,14 @@ const VSFrameRef *VS_CC d2vGetFrame(int n, int activationReason, void **instance
     return f;
 }
 
-void VS_CC d2vFree(void *instanceData, VSCore *core, const VSAPI *vsapi)
+static void VS_CC d2vFree(void *instanceData, VSCore *core, const VSAPI *vsapi)
 {
     d2vData *d = (d2vData *) instanceData;
     d2vfreep(&d->d2v);
     decodefreep(&d->dec);
     av_frame_unref(d->frame);
     av_freep(&d->frame);
-    free(d);
+    delete d;
 }
 
 void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, const VSAPI *vsapi)
@@ -164,16 +162,12 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
     }
 
     /* Allocate our private data. */
-    data = (d2vData *) malloc(sizeof(*data));
-    if (!data) {
-        vsapi->setError(out, "Cannot allocate private data.");
-        return;
-    }
+    data = new d2vData{};
 
     data->d2v = d2vparse(vsapi->propGetData(in, "input", 0, 0), msg);
     if (!data->d2v) {
         vsapi->setError(out, msg.c_str());
-        free(data);
+        delete data;
         return;
     }
 
@@ -181,7 +175,7 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
     if (!data->dec) {
         vsapi->setError(out, msg.c_str());
         d2vfreep(&data->d2v);
-        free(data);
+        delete data;
         return;
     }
 
@@ -214,7 +208,7 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
         vsapi->setError(out, "Cannot allocate AVFrame.");
         d2vfreep(&data->d2v);
         decodefreep(&data->dec);
-        free(data);
+        delete data;
         return;
     }
 
@@ -232,7 +226,7 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
         decodefreep(&data->dec);
         av_frame_unref(data->frame);
         av_freep(&data->frame);
-        free(data);
+        delete data;
         return;
     }
 
@@ -242,7 +236,7 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
         decodefreep(&data->dec);
         av_frame_unref(data->frame);
         av_freep(&data->frame);
-        free(data);
+        delete data;
         return;
     }
 
@@ -269,13 +263,11 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
         VSNodeRef *middle;
         VSNodeRef *after;
         VSMap *args = vsapi->createMap();
-        VSMap *ret;
-        const char *error;
 
         vsapi->propSetNode(args, "clip", before, paReplace);
         vsapi->freeNode(before);
 
-        ret    = vsapi->invoke(corePlugin, "Cache", args);
+        VSMap *ret    = vsapi->invoke(corePlugin, "Cache", args);
         middle = vsapi->propGetNode(ret, "clip", 0, NULL);
         vsapi->freeMap(ret);
 
@@ -287,7 +279,7 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
         ret = vsapi->invoke(d2vPlugin, "ApplyRFF", args);
         vsapi->freeMap(args);
 
-        error = vsapi->getError(ret);
+        const char *error = vsapi->getError(ret);
         if (error) {
             vsapi->setError(out, error);
             vsapi->freeMap(ret);

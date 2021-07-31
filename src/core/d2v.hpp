@@ -81,7 +81,7 @@ typedef struct location {
 
 typedef struct d2vcontext {
     int num_files;
-    string *files;
+    vector<string> files;
 
     enum streamtype stream_type;
     int ts_pid;
@@ -100,6 +100,5 @@ typedef struct d2vcontext {
 
 void d2vfreep(d2vcontext **ctx);
 d2vcontext *d2vparse(const char *filename, string& err);
-string d2vgetpath(const char *d2v_path, const string& file);
 
 #endif

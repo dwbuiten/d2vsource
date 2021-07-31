@@ -26,9 +26,9 @@
 extern "C" {
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
-
-#include <stdint.h>
 }
+
+#include <cstdint>
 
 typedef struct decodecontext {
     vector<FILE *> files;
@@ -37,7 +37,7 @@ typedef struct decodecontext {
     AVCodecContext *avctx;
     AVFormatContext *fctx;
     const AVCodec *incodec;
-    string *fakename;
+    const char *fakename;
 
     AVPacket *inpkt;
 

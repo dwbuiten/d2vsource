@@ -25,12 +25,10 @@
 #include <sstream>
 #include <vector>
 
-extern "C" {
-#include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-}
+#include <cassert>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 #include "compat.hpp"
 #include "d2v.hpp"
@@ -42,7 +40,7 @@ extern "C" {
 
 using namespace std;
 
-string d2vgetpath(const char *d2v_path, const string& file)
+static string d2vgetpath(const char *d2v_path, const string& file)
 {
     string path;
     string d2v       = d2v_path;
@@ -61,23 +59,10 @@ string d2vgetpath(const char *d2v_path, const string& file)
 /* Conditionally free all memebers of d2vcontext. */
 void d2vfreep(d2vcontext **ctx)
 {
-    d2vcontext *lctx = *ctx;
-    unsigned int i;
-
-    if (!lctx)
+    if (!*ctx)
         return;
 
-    lctx->frames.clear();
-    for(i = 0; i < lctx->gops.size(); i++) {
-        gop g = lctx->gops[i];
-        g.flags.clear();
-    }
-    lctx->gops.clear();
-
-    if (lctx->files)
-       delete [] lctx->files;
-
-    delete lctx;
+    delete *ctx;
 
     *ctx = NULL;
 }
@@ -87,13 +72,10 @@ d2vcontext *d2vparse(const char *filename, string& err)
 {
     string line;
     FILE *input = NULL;
-    d2vcontext *ret;
     int i;
 
-    ret = new d2vcontext;
+    d2vcontext *ret = new d2vcontext{};
 
-    /* Zero the context to aid in conditional freeing later. */
-    memset(ret, 0, sizeof(*ret));
     ret->stream_type   = UNSET;
     ret->ts_pid        = -1;
     ret->loc.startfile = -1;
@@ -134,7 +116,7 @@ d2vcontext *d2vparse(const char *filename, string& err)
     }
 
     /* Allocate files array. */
-    ret->files = new string[ret->num_files];
+    ret->files.resize(ret->num_files);
 
     /* Read them all in. */
     for(i = 0; i < ret->num_files; i++) {

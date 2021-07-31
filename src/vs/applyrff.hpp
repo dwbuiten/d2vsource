@@ -47,9 +47,6 @@ typedef struct rffData {
     VSNodeRef *node;
 } rffData;
 
-void VS_CC rffInit(VSMap *in, VSMap *out, void **instanceData, VSNode *node, VSCore *core, const VSAPI *vsapi);
-void VS_CC rffFree(void *instanceData, VSCore *core, const VSAPI *vsapi);
 void VS_CC rffCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, const VSAPI *vsapi);
-const VSFrameRef *VS_CC rffGetFrame(int n, int activationReason, void **instanceData, void **frameData, VSFrameContext *frameCtx, VSCore *core, const VSAPI *vsapi);
 
 #endif

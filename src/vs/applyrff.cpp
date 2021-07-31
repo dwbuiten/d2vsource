@@ -20,10 +20,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-extern "C" {
-#include <stdint.h>
-#include <stdlib.h>
-}
+#include <cstdint>
+#include <cstdlib>
 
 #include <algorithm>
 
@@ -34,19 +32,18 @@ extern "C" {
 #include "d2v.hpp"
 #include "gop.hpp"
 
-void VS_CC rffInit(VSMap *in, VSMap *out, void **instanceData, VSNode *node, VSCore *core, const VSAPI *vsapi)
+static void VS_CC rffInit(VSMap *in, VSMap *out, void **instanceData, VSNode *node, VSCore *core, const VSAPI *vsapi)
 {
     rffData *d = (rffData *) *instanceData;
     vsapi->setVideoInfo(&d->vi, 1, node);
 }
 
-const VSFrameRef *VS_CC rffGetFrame(int n, int activationReason, void **instanceData, void **frameData,
+static const VSFrameRef *VS_CC rffGetFrame(int n, int activationReason, void **instanceData, void **frameData,
                                     VSFrameContext *frameCtx, VSCore *core, const VSAPI *vsapi)
 {
     const rffData *d = (const rffData *) *instanceData;
     const VSFrameRef *st, *sb;
     VSFrameRef *f;
-    VSMap *props;
     int top, bottom;
     int fieldbased;
     int i;
@@ -119,7 +116,7 @@ const VSFrameRef *VS_CC rffGetFrame(int n, int activationReason, void **instance
 
     if (!samefields) {
         /* Set field order. */
-        props = vsapi->getFramePropsRW(f);
+        VSMap *props = vsapi->getFramePropsRW(f);
 
         // They point to elements of an array, so pointer comparison is fine.
         if (bottom_field < top_field)
@@ -137,12 +134,11 @@ const VSFrameRef *VS_CC rffGetFrame(int n, int activationReason, void **instance
     return f;
 }
 
-void VS_CC rffFree(void *instanceData, VSCore *core, const VSAPI *vsapi)
+static void VS_CC rffFree(void *instanceData, VSCore *core, const VSAPI *vsapi)
 {
     rffData *d = (rffData *) instanceData;
     vsapi->freeNode(d->node);
     d2vfreep(&d->d2v);
-    d->fields.clear();
     delete d;
 }
 
@@ -150,7 +146,6 @@ void VS_CC rffCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
 {
     rffData *data;
     string msg;
-    int i;
 
     /* Allocate our private data. */
     data = new(nothrow) rffData;
@@ -160,7 +155,7 @@ void VS_CC rffCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
     }
 
     /* Parse the D2V to get flags. */
-    data->d2v = d2vparse((char *) vsapi->propGetData(in, "d2v", 0, 0), msg);
+    data->d2v = d2vparse(vsapi->propGetData(in, "d2v", 0, 0), msg);
     if (!data->d2v) {
         vsapi->setError(out, msg.c_str());
         delete data;
@@ -176,7 +171,7 @@ void VS_CC rffCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
      * with which frames, and out total number of frames after
      * apply the RFF flags.
      */
-    for(i = 0; i < data->vi.numFrames; i++) {
+    for(int i = 0; i < data->vi.numFrames; i++) {
         frame f  = data->d2v->frames[i];
         bool rff = !!(data->d2v->gops[f.gop].flags[f.offset] & FRAME_FLAG_RFF);
         bool tff = !!(data->d2v->gops[f.gop].flags[f.offset] & FRAME_FLAG_TFF);

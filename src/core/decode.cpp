@@ -27,8 +27,9 @@
 extern "C" {
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
-#include <stdio.h>
 }
+
+#include <cstdio>
 
 #include "compat.hpp"
 #include "d2v.hpp"
@@ -124,7 +125,6 @@ static int read_packet(void *opaque, uint8_t *buf, int size)
 void decodefreep(decodecontext **ctx)
 {
     decodecontext *lctx = *ctx;
-    unsigned int i;
 
     if (!lctx)
         return;
@@ -139,18 +139,14 @@ void decodefreep(decodecontext **ctx)
         avformat_close_input(&lctx->fctx);
     }
 
-    for(i = 0; i < lctx->files.size(); i++)
+    for (size_t i = 0; i < lctx->files.size(); i++)
         fclose(lctx->files[i]);
-
-    lctx->files.clear();
-    lctx->file_sizes.clear();
 
     if (lctx->avctx) {
         avcodec_close(lctx->avctx);
         av_freep(&lctx->avctx);
     }
 
-    delete lctx->fakename;
     delete lctx;
 
     *ctx = NULL;
@@ -159,22 +155,15 @@ void decodefreep(decodecontext **ctx)
 /* Initialize everything we can with regards to decoding */
 decodecontext *decodeinit(d2vcontext *dctx, int threads, string& err)
 {
-    decodecontext *ret;
-    int i, av_ret;
+    int av_ret;
 
-    ret = new decodecontext;
-
-    /* Zero the context to aid in conditional freeing later. */
-    memset(ret, 0, sizeof(*ret));
-
-    /* Holds our "filename" we pass to libavformat. */
-    ret->fakename = new string;
+    decodecontext *ret = new decodecontext{};
 
     /* Set our stream index to -1 (uninitialized). */
     ret->stream_index = -1;
 
     /* Open each file and stash its size. */
-    for(i = 0; i < dctx->num_files; i++) {
+    for(int i = 0; i < dctx->num_files; i++) {
         FILE *in;
         int64_t size;
 
@@ -275,15 +264,13 @@ fail:
 
 int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *out, string& err)
 {
-    frame f;
-    gop g;
     unsigned int i;
     int o, j, av_ret, offset;
     bool next = true;
 
     /* Get our frame and the GOP its in. */
-    f = ctx->frames[frame_num];
-    g = ctx->gops[f.gop];
+    frame f = ctx->frames[frame_num];
+    gop g = ctx->gops[f.gop];
 
     /*
      * The offset is how many frames we have to decode from our
@@ -391,17 +378,17 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
         if (ctx->stream_type == ELEMENTARY) {
             if (ctx->mpeg_type == 264) {
                 dctx->fctx->iformat = av_find_input_format("h264");
-                *dctx->fakename  = "fakevideo.h264";
+                dctx->fakename  = "fakevideo.h264";
             } else {
                 dctx->fctx->iformat = av_find_input_format("mpegvideo");
-                *dctx->fakename  = "fakevideo.m2v";
+                dctx->fakename  = "fakevideo.m2v";
             }
         } else if (ctx->stream_type == PROGRAM) {
             dctx->fctx->iformat = av_find_input_format("mpeg");
-            *dctx->fakename      = "fakevideo.vob";
+            dctx->fakename      = "fakevideo.vob";
         } else if (ctx->stream_type == TRANSPORT) {
             dctx->fctx->iformat = av_find_input_format("mpegts");
-            *dctx->fakename      = "fakevideo.ts";
+            dctx->fakename      = "fakevideo.ts";
         } else {
             err = "Unsupported format.";
             goto dfail;
@@ -416,7 +403,7 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
         dctx->fctx->pb = avio_alloc_context(dctx->in, 32 * 1024, 0, dctx, read_packet, NULL, file_seek);
 
         /* Open the demuxer. */
-        av_ret = avformat_open_input(&dctx->fctx, (*dctx->fakename).c_str(), NULL, NULL);
+        av_ret = avformat_open_input(&dctx->fctx, dctx->fakename, NULL, NULL);
         if (av_ret < 0) {
             err = "Cannot open buffer in libavformat.";
             goto dfail;

@@ -43,9 +43,6 @@ typedef struct d2vData {
     bool format_set;
 } d2vData;
 
-void VS_CC d2vInit(VSMap *in, VSMap *out, void **instanceData, VSNode *node, VSCore *core, const VSAPI *vsapi);
-void VS_CC d2vFree(void *instanceData, VSCore *core, const VSAPI *vsapi);
 void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, const VSAPI *vsapi);
-const VSFrameRef *VS_CC d2vGetFrame(int n, int activationReason, void **instanceData, void **frameData, VSFrameContext *frameCtx, VSCore *core, const VSAPI *vsapi);
 
 #endif

@@ -20,10 +20,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-extern "C" {
-#include <stdint.h>
-#include <stdlib.h>
 
+#include <cstdint>
+#include <cstdlib>
+
+extern "C" {
 #include <libavcodec/avcodec.h>
 }
 
@@ -37,7 +38,6 @@ int VSGetBuffer(AVCodecContext *avctx, AVFrame *pic, int flag)
 {
     VSData *userdata;
     d2vData *data = (d2vData *) avctx->opaque;
-    int i;
 
     if (!data->format_set) {
         switch(avctx->pix_fmt) {
@@ -92,7 +92,7 @@ int VSGetBuffer(AVCodecContext *avctx, AVFrame *pic, int flag)
     pic->format              = avctx->pix_fmt;
     pic->sample_aspect_ratio = avctx->sample_aspect_ratio;
 
-    for(i = 0; i < data->vi.format->numPlanes; i++) {
+    for(int i = 0; i < data->vi.format->numPlanes; i++) {
         pic->data[i]     = data->api->getWritePtr(userdata->vs_frame, i);
         pic->linesize[i] = data->api->getStride(userdata->vs_frame, i);
     }
