@@ -58,9 +58,8 @@ static int64_t file_seek(void *opaque, int64_t offset, int whence)
          * which does its job fine as-is.
          */
         int64_t real_offset = offset + ctx->orig_file_offset;
-        unsigned int i;
 
-        for(i = ctx->orig_file; i < ctx->cur_file; i++)
+        for(unsigned int i = ctx->orig_file; i < ctx->cur_file; i++)
             real_offset -= ctx->file_sizes[i];
 
         while(real_offset > ctx->file_sizes[ctx->cur_file] && ctx->cur_file != ctx->files.size() - 1) {
@@ -104,14 +103,13 @@ static int64_t file_seek(void *opaque, int64_t offset, int whence)
 static int read_packet(void *opaque, uint8_t *buf, int size)
 {
     decodecontext *ctx = (decodecontext *) opaque;
-    size_t ret;
 
     /*
      * If we read in less than we got asked for, and we're
      * not on the last file, then start reading seamlessly
      * on the next file.
      */
-    ret = fread(buf, 1, size, ctx->files[ctx->cur_file]);
+    size_t ret = fread(buf, 1, size, ctx->files[ctx->cur_file]);
     if (ret < (size_t) size && ctx->cur_file != ctx->files.size() - 1) {
         ctx->cur_file++;
         fseeko(ctx->files[ctx->cur_file], 0, SEEK_SET);
@@ -122,42 +120,31 @@ static int read_packet(void *opaque, uint8_t *buf, int size)
 }
 
 /* Conditionally free all memebers of decodecontext. */
-void decodefreep(decodecontext **ctx)
+decodecontext::~decodecontext()
 {
-    decodecontext *lctx = *ctx;
+    av_freep(&in);
+    av_packet_free(&inpkt);
 
-    if (!lctx)
-        return;
+    if (fctx) {
+        if (fctx->pb)
+            av_freep(&fctx->pb);
 
-    av_freep(&lctx->in);
-    av_packet_free(&lctx->inpkt);
-
-    if (lctx->fctx) {
-        if (lctx->fctx->pb)
-            av_freep(&lctx->fctx->pb);
-
-        avformat_close_input(&lctx->fctx);
+        avformat_close_input(&fctx);
     }
 
-    for (size_t i = 0; i < lctx->files.size(); i++)
-        fclose(lctx->files[i]);
+    for (size_t i = 0; i < files.size(); i++)
+        fclose(files[i]);
 
-    if (lctx->avctx) {
-        avcodec_close(lctx->avctx);
-        av_freep(&lctx->avctx);
+    if (avctx) {
+        avcodec_close(avctx);
+        av_freep(&avctx);
     }
-
-    delete lctx;
-
-    *ctx = NULL;
 }
 
 /* Initialize everything we can with regards to decoding */
 decodecontext *decodeinit(d2vcontext *dctx, int threads, string& err)
 {
-    int av_ret;
-
-    decodecontext *ret = new decodecontext{};
+    std::unique_ptr<decodecontext> ret(new decodecontext{});
 
     /* Set our stream index to -1 (uninitialized). */
     ret->stream_index = -1;
@@ -174,7 +161,7 @@ decodecontext *decodeinit(d2vcontext *dctx, int threads, string& err)
         if (!size) {
             err  = "Cannot parse file name: ";
             err += dctx->files[i];
-            goto fail;
+            return NULL;
         }
 
         in = _wfopen(filename, L"rb");
@@ -185,7 +172,7 @@ decodecontext *decodeinit(d2vcontext *dctx, int threads, string& err)
         if (!in) {
             err  = "Cannot open file: ";
             err += dctx->files[i];
-            goto fail;
+            return NULL;
         }
 
         fseeko(in, 0, SEEK_END);
@@ -216,14 +203,14 @@ decodecontext *decodeinit(d2vcontext *dctx, int threads, string& err)
         ret->incodec = avcodec_find_decoder(AV_CODEC_ID_H264);
     } else {
         err = "Invalid MPEG Type.";
-        goto fail;
+        return NULL;
     }
 
     /* Allocate the codec's context. */
     ret->avctx = avcodec_alloc_context3(ret->incodec);
     if (!ret->avctx) {
         err = "Cannot allocate AVCodecContext.";
-        goto fail;
+        return NULL;
     }
 
     /* Set the IDCT algorithm. */
@@ -233,39 +220,33 @@ decodecontext *decodeinit(d2vcontext *dctx, int threads, string& err)
     ret->avctx->thread_count = threads;
 
     /* Open it. */
-    av_ret = avcodec_open2(ret->avctx, ret->incodec, NULL);
+    int av_ret = avcodec_open2(ret->avctx, ret->incodec, NULL);
     if (av_ret < 0) {
         err = "Cannot open decoder.";
-        goto fail;
+        return NULL;
     }
 
     /* Allocate the scratch buffer for our custom AVIO context. */
     ret->in = (uint8_t *) av_malloc(32 * 1024);
     if (!ret->in) {
         err = "Cannot alloc inbuf.";
-        goto fail;
+        return NULL;
     }
 
     ret->inpkt = av_packet_alloc();
     if (!ret->inpkt) {
         err = "Cannot alloc packet.";
-        goto fail;
+        return NULL;
     }
 
     /* We don't want to hear all the info it has. */
     av_log_set_level(AV_LOG_PANIC);
 
-    return ret;
-
-fail:
-    decodefreep(&ret);
-    return NULL;
+    return ret.release();
 }
 
 int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *out, string& err)
 {
-    unsigned int i;
-    int o, j, av_ret, offset;
     bool next = true;
 
     /* Get our frame and the GOP its in. */
@@ -279,7 +260,7 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
      * D2V file, but it may be more in an open GOP situation,
      * which we handle below.
      */
-    offset = f.offset;
+    int offset = f.offset;
 
     /*
      * If we're in a open GOP situation, then start decoding
@@ -367,7 +348,7 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
         dctx->fctx = avformat_alloc_context();
         if (!dctx->fctx) {
             err = "Cannot allocate AVFormatContext.";
-            goto dfail;
+            return -1;
         }
 
         /*
@@ -391,7 +372,8 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
             dctx->fakename      = "fakevideo.ts";
         } else {
             err = "Unsupported format.";
-            goto dfail;
+            avformat_close_input(&dctx->fctx);
+            return -1;
         }
 
         /*
@@ -403,10 +385,11 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
         dctx->fctx->pb = avio_alloc_context(dctx->in, 32 * 1024, 0, dctx, read_packet, NULL, file_seek);
 
         /* Open the demuxer. */
-        av_ret = avformat_open_input(&dctx->fctx, dctx->fakename, NULL, NULL);
+        int av_ret = avformat_open_input(&dctx->fctx, dctx->fakename, NULL, NULL);
         if (av_ret < 0) {
             err = "Cannot open buffer in libavformat.";
-            goto dfail;
+            avformat_close_input(&dctx->fctx);
+            return -1;
         }
 
         /*
@@ -430,6 +413,8 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
      * Set it to the stream that matches our MPEG-TS PID if applicable.
      */
     if (dctx->stream_index == -1) {
+        unsigned int i;
+
         if (ctx->ts_pid > 0) {
             for(i = 0; i < dctx->fctx->nb_streams; i++)
                 if (dctx->fctx->streams[i]->id == ctx->ts_pid)
@@ -446,7 +431,8 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
             else
                 err = "No video stream found.";
 
-            goto dfail;
+            avformat_close_input(&dctx->fctx);
+            return -1;
         }
 
         dctx->stream_index = (int) i;
@@ -460,8 +446,8 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
         av_read_frame(dctx->fctx, dctx->inpkt);
 
     /* If we're decoding linearly, there is obviously no offset. */
-    o = next ? 0 : offset;
-    for(j = 0; j <= o; j++) {
+    int o = next ? 0 : offset;
+    for(int j = 0; j <= o; j++) {
         while(dctx->inpkt->stream_index != dctx->stream_index) {
             av_packet_unref(dctx->inpkt);
             av_read_frame(dctx->fctx, dctx->inpkt);
@@ -490,8 +476,4 @@ int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *ou
     dctx->last_frame = frame_num;
 
     return 0;
-
-dfail:
-    avformat_close_input(&dctx->fctx);
-    return -1;
 }

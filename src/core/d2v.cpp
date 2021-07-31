@@ -56,25 +56,12 @@ static string d2vgetpath(const char *d2v_path, const string& file)
     return path;
 }
 
-/* Conditionally free all memebers of d2vcontext. */
-void d2vfreep(d2vcontext **ctx)
-{
-    if (!*ctx)
-        return;
-
-    delete *ctx;
-
-    *ctx = NULL;
-}
-
 /* Parse the entire D2V index and build the GOP and frame lists. */
 d2vcontext *d2vparse(const char *filename, string& err)
 {
     string line;
-    FILE *input = NULL;
-    int i;
 
-    d2vcontext *ret = new d2vcontext{};
+    std::unique_ptr<d2vcontext> ret(new d2vcontext{});
 
     ret->stream_type   = UNSET;
     ret->ts_pid        = -1;
@@ -83,61 +70,61 @@ d2vcontext *d2vparse(const char *filename, string& err)
 #ifdef _WIN32
     wchar_t wide_filename[_MAX_PATH];
 
-    i = MultiByteToWideChar(CP_UTF8, 0, filename, -1, wide_filename, ARRAYSIZE(wide_filename));
-    if (!i) {
+    int fnlen = MultiByteToWideChar(CP_UTF8, 0, filename, -1, wide_filename, ARRAYSIZE(wide_filename));
+    if (!fnlen) {
         err  = "D2V filename is invalid: ";
         err += filename;
-        goto fail;
+        return NULL;
     }
 
-    input = _wfopen(wide_filename, L"rb");
+    std::unique_ptr<FILE, decltype(&fclose)> input(_wfopen(wide_filename, L"rb"), &fclose);
 #else
-    input = fopen(filename, "rb");
+    std::unique_ptr<FILE, decltype(&fclose)> input(fopen(filename, "rb"), &fclose);
 #endif
 
     if (!input) {
         err = "D2V cannot be opened.";
-        goto fail;
+        return NULL;
     }
 
     /* Check the DGIndexProjectFile version. */
-    d2vgetline(input, line);
+    d2vgetline(input.get(), line);
     if (line.substr(18, 2) != D2V_VERSION && line.substr(18, 2) != "42") {
         err = "D2V Version is unsupported!";
-        goto fail;
+        return NULL;
     }
 
     /* Get the number of files. */
-    d2vgetline(input, line);
+    d2vgetline(input.get(), line);
     ret->num_files = atoi(line.c_str());
     if (!ret->num_files) {
         err = "Invalid D2V File.";
-        goto fail;
+        return NULL;
     }
 
     /* Allocate files array. */
     ret->files.resize(ret->num_files);
 
     /* Read them all in. */
-    for(i = 0; i < ret->num_files; i++) {
-        d2vgetline(input, line);
+    for(int i = 0; i < ret->num_files; i++) {
+        d2vgetline(input.get(), line);
         if (line.length()) {
             ret->files[i] = d2vgetpath(filename, line);
         } else {
             err = "Invalid file set in D2V.";
-            goto fail;
+            return NULL;
         }
     }
 
     /* Next line should be empty. */
-    d2vgetline(input, line);
+    d2vgetline(input.get(), line);
     if (line.length()) {
         err = "Invalid D2V structure.";
-        goto fail;
+        return NULL;
     }
 
     /* Iterate over the D2V header and fill the context members. */
-    d2vgetline(input, line);
+    d2vgetline(input.get(), line);
     while(line.length()) {
         size_t mid = line.find("=");
         string l   = line.substr(0, mid);
@@ -184,40 +171,38 @@ d2vcontext *d2vparse(const char *filename, string& err)
             ret->loc.endoffset   = strtoul(r.substr(pos3 + 1, r.length() - 1).c_str(), NULL, 16);
         }
 
-        d2vgetline(input, line);
+        d2vgetline(input.get(), line);
     }
 
     /* Some basic validation of input headers. */
     if (ret->fps_num <= 0 || ret->fps_den <= 0) {
         err = "Invalid framerate in D2V header.";
-        goto fail;
+        return NULL;
     } else if (ret->mpeg_type != 1 && ret->mpeg_type != 2 && ret->mpeg_type != 264) {
         err = "Invalid MPEG type in D2V header.";
-        goto fail;
+        return NULL;
     } else if (ret->width <= 0 || ret->height <= 0) {
         err = "Invalid dimensions in D2V header.";
-        goto fail;
+        return NULL;
     } else if (ret->stream_type == TRANSPORT && ret->ts_pid < 0) {
         err = "Invalid PID in D2V header.";
-        goto fail;
+        return NULL;
     } else if (ret->stream_type == UNSET) {
         err = "Invalid stream type in D2V header.";
-        goto fail;
+        return NULL;
     } else if (ret->loc.startfile < 0 || ret->loc.startoffset < 0 ||
                ret->loc.endfile < ret->loc.startfile ||
                (ret->loc.endfile == ret->loc.startfile && ret->loc.endoffset < ret->loc.startoffset)) {
         err = "Invalid location in D2V header.";
-        goto fail;
+        return NULL;
     }
 
     /* Read in all GOPs. */
-    i = 0;
-    d2vgetline(input, line);
+    int i = 0;
+    d2vgetline(input.get(), line);
     while(line.length()) {
-        string tok;
         istringstream ss(line);
-        int offset;
-        gop cur_gop;
+        gop cur_gop = {};
 
         ss >> hex >> cur_gop.info;
         ss >> dec >> cur_gop.matrix;
@@ -227,7 +212,7 @@ d2vcontext *d2vparse(const char *filename, string& err)
         ss >> dec >> cur_gop.vob;
         ss >> dec >> cur_gop.cell;
 
-        offset = 0;
+        int offset = 0;
         while(!ss.eof()) {
             uint16_t flags;
             frame f;
@@ -258,22 +243,13 @@ d2vcontext *d2vparse(const char *filename, string& err)
         ret->gops.push_back(cur_gop);
         i++;
 
-        d2vgetline(input, line);
+        d2vgetline(input.get(), line);
     }
-
-    fclose(input);
-    input = NULL;
 
     if (!ret->frames.size() || !ret->gops.size()) {
         err = "No frames in D2V file!";
-        goto fail;
+        return NULL;
     }
 
-    return ret;
-
-fail:
-    d2vfreep(&ret);
-    if (input)
-        fclose(input);
-    return NULL;
+    return ret.release();
 }

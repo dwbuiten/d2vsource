@@ -31,6 +31,13 @@
 #include "decode.hpp"
 #include "directrender.hpp"
 
+d2vData::~d2vData() {
+    if (frame) {
+        av_frame_unref(frame);
+        av_freep(&frame);
+    }
+}
+
 static void VS_CC d2vInit(VSMap *in, VSMap *out, void **instanceData, VSNode *node, VSCore *core, const VSAPI *vsapi)
 {
     d2vData *d = (d2vData *) *instanceData;
@@ -41,24 +48,20 @@ static const VSFrameRef *VS_CC d2vGetFrame(int n, int activationReason, void **i
                                     VSFrameContext *frameCtx, VSCore *core, const VSAPI *vsapi)
 {
     d2vData *d = (d2vData *) *instanceData;
-    const VSFrameRef *s;
     VSFrameRef *f;
-    VSMap *props;
     string msg;
-    int ret;
-    int plane;
 
     /* Unreference the previously decoded frame. */
     av_frame_unref(d->frame);
 
-    ret = decodeframe(n, d->d2v, d->dec, d->frame, msg);
+    int ret = decodeframe(n, d->d2v.get(), d->dec.get(), d->frame, msg);
     if (ret < 0) {
         vsapi->setFilterError(msg.c_str(), frameCtx);
         return NULL;
     }
 
     /* Grab our direct-rendered frame. */
-    s = (const VSFrameRef *) d->frame->opaque;
+    const VSFrameRef *s = (const VSFrameRef *) d->frame->opaque;
     if (!s) {
         vsapi->setFilterError("Seek pattern broke d2vsource! Please send a sample.", frameCtx);
         return NULL;
@@ -71,7 +74,7 @@ static const VSFrameRef *VS_CC d2vGetFrame(int n, int activationReason, void **i
         f = vsapi->newVideoFrame(d->vi.format, d->vi.width, d->vi.height, NULL, core);
 
         /* Copy into VS's buffers. */
-        for (plane = 0; plane < d->vi.format->numPlanes; plane++) {
+        for (int plane = 0; plane < d->vi.format->numPlanes; plane++) {
             uint8_t *dstp = vsapi->getWritePtr(f, plane);
             const uint8_t *srcp = vsapi->getReadPtr(s, plane);
             int dst_stride = vsapi->getStride(f, plane);
@@ -83,7 +86,7 @@ static const VSFrameRef *VS_CC d2vGetFrame(int n, int activationReason, void **i
         }
     }
 
-    props = vsapi->getFramePropsRW(f);
+    VSMap *props = vsapi->getFramePropsRW(f);
 
     /*
      * The DGIndex manual simply says:
@@ -135,24 +138,16 @@ static const VSFrameRef *VS_CC d2vGetFrame(int n, int activationReason, void **i
 static void VS_CC d2vFree(void *instanceData, VSCore *core, const VSAPI *vsapi)
 {
     d2vData *d = (d2vData *) instanceData;
-    d2vfreep(&d->d2v);
-    decodefreep(&d->dec);
-    av_frame_unref(d->frame);
-    av_freep(&d->frame);
     delete d;
 }
 
 void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, const VSAPI *vsapi)
 {
-    d2vData *data;
     string msg;
-    bool no_crop;
-    bool rff;
-    int threads;
     int err;
 
     /* Need to get thread info before anything to pass to decodeinit(). */
-    threads = int64ToIntS(vsapi->propGetInt(in, "threads", 0, &err));
+    int threads = int64ToIntS(vsapi->propGetInt(in, "threads", 0, &err));
     if (err)
         threads = 0;
 
@@ -162,20 +157,17 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
     }
 
     /* Allocate our private data. */
-    data = new d2vData{};
+    std::unique_ptr<d2vData> data(new d2vData{});
 
-    data->d2v = d2vparse(vsapi->propGetData(in, "input", 0, 0), msg);
+    data->d2v.reset(d2vparse(vsapi->propGetData(in, "input", 0, 0), msg));
     if (!data->d2v) {
         vsapi->setError(out, msg.c_str());
-        delete data;
         return;
     }
 
-    data->dec = decodeinit(data->d2v, threads, msg);
+    data->dec.reset(decodeinit(data->d2v.get(), threads, msg));
     if (!data->dec) {
         vsapi->setError(out, msg.c_str());
-        d2vfreep(&data->d2v);
-        delete data;
         return;
     }
 
@@ -183,7 +175,7 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
      * Make our private data available to libavcodec, and
      * set our custom get/release_buffer funcs.
      */
-    data->dec->avctx->opaque         = (void *) data;
+    data->dec->avctx->opaque         = (void *) data.get();
     data->dec->avctx->get_buffer2    = VSGetBuffer;
 
     data->vi.numFrames = (int) data->d2v->frames.size();
@@ -206,9 +198,6 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
     data->frame = av_frame_alloc();
     if (!data->frame) {
         vsapi->setError(out, "Cannot allocate AVFrame.");
-        d2vfreep(&data->d2v);
-        decodefreep(&data->dec);
-        delete data;
         return;
     }
 
@@ -218,41 +207,29 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
      * fill in data->vi.format.
      */
     data->format_set = false;
-    err              = decodeframe(0, data->d2v, data->dec, data->frame, msg);
+    err              = decodeframe(0, data->d2v.get(), data->dec.get(), data->frame, msg);
     if (err < 0) {
         msg.insert(0, "Failed to decode test frame: ");
         vsapi->setError(out, msg.c_str());
-        d2vfreep(&data->d2v);
-        decodefreep(&data->dec);
-        av_frame_unref(data->frame);
-        av_freep(&data->frame);
-        delete data;
         return;
     }
 
     if (!data->format_set) {
         vsapi->setError(out, "Source: video has unsupported pixel format.");
-        d2vfreep(&data->d2v);
-        decodefreep(&data->dec);
-        av_frame_unref(data->frame);
-        av_freep(&data->frame);
-        delete data;
         return;
     }
 
     /* See if nocrop is enabled, and set the width/height accordingly. */
-    no_crop = !!vsapi->propGetInt(in, "nocrop", 0, &err);
-    if (err)
-        no_crop = false;
+    bool no_crop = !!vsapi->propGetInt(in, "nocrop", 0, &err);
 
     if (no_crop) {
         data->vi.width  = data->aligned_width;
         data->vi.height = data->aligned_height;
     }
 
-    vsapi->createFilter(in, out, "d2vsource", d2vInit, d2vGetFrame, d2vFree, fmUnordered, nfMakeLinear, data, core);
+    vsapi->createFilter(in, out, "d2vsource", d2vInit, d2vGetFrame, d2vFree, fmUnordered, nfMakeLinear, data.release(), core);
 
-    rff = !!vsapi->propGetInt(in, "rff", 0, &err);
+    bool rff = !!vsapi->propGetInt(in, "rff", 0, &err);
     if (err)
         rff = true;
 
@@ -260,15 +237,13 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
         VSPlugin *d2vPlugin = vsapi->getPluginById("com.sources.d2vsource", core);
         VSPlugin *corePlugin = vsapi->getPluginById("com.vapoursynth.std", core);
         VSNodeRef *before = vsapi->propGetNode(out, "clip", 0, NULL);
-        VSNodeRef *middle;
-        VSNodeRef *after;
         VSMap *args = vsapi->createMap();
 
         vsapi->propSetNode(args, "clip", before, paReplace);
         vsapi->freeNode(before);
 
         VSMap *ret    = vsapi->invoke(corePlugin, "Cache", args);
-        middle = vsapi->propGetNode(ret, "clip", 0, NULL);
+        VSNodeRef *middle = vsapi->propGetNode(ret, "clip", 0, NULL);
         vsapi->freeMap(ret);
 
         vsapi->propSetNode(args, "clip", middle, paReplace);
@@ -286,7 +261,7 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
             return;
         }
 
-        after = vsapi->propGetNode(ret, "clip", 0, NULL);
+        VSNodeRef *after = vsapi->propGetNode(ret, "clip", 0, NULL);
 
         vsapi->propSetNode(out, "clip", after, paReplace);
         vsapi->freeNode(after);

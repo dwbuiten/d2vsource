@@ -25,6 +25,7 @@
 
 #include <VapourSynth.h>
 #include <VSHelper.h>
+#include <memory>
 
 #include "d2v.hpp"
 
@@ -40,7 +41,7 @@ typedef struct rffField {
 } rffField;
 
 typedef struct rffData {
-    d2vcontext *d2v;
+    unique_ptr<d2vcontext> d2v;
     vector<rffField> fields; // Output fields, in the order they are to be displayed.
 
     VSVideoInfo vi;

@@ -36,7 +36,6 @@ extern "C" {
 
 int VSGetBuffer(AVCodecContext *avctx, AVFrame *pic, int flag)
 {
-    VSData *userdata;
     d2vData *data = (d2vData *) avctx->opaque;
 
     if (!data->format_set) {
@@ -77,7 +76,7 @@ int VSGetBuffer(AVCodecContext *avctx, AVFrame *pic, int flag)
         data->format_set = true;
     }
 
-    userdata = new VSData;
+    VSData *userdata = new VSData{};
     userdata->d2v      = (d2vData *) avctx->opaque;
     userdata->vs_frame = data->api->newVideoFrame(data->vi.format, data->aligned_width, data->aligned_height, NULL, data->core);
 

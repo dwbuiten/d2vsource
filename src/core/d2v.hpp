@@ -98,7 +98,6 @@ typedef struct d2vcontext {
     vector<gop> gops;
 } d2vcontext;
 
-void d2vfreep(d2vcontext **ctx);
 d2vcontext *d2vparse(const char *filename, string& err);
 
 #endif

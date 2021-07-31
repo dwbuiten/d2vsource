@@ -25,13 +25,14 @@
 
 #include <VapourSynth.h>
 #include <VSHelper.h>
+#include <memory>
 
 #include "d2v.hpp"
 #include "decode.hpp"
 
 typedef struct d2vData {
-    d2vcontext *d2v;
-    decodecontext *dec;
+    unique_ptr<d2vcontext> d2v;
+    unique_ptr<decodecontext> dec;
     AVFrame *frame;
     VSVideoInfo vi;
     VSCore *core;
@@ -41,6 +42,8 @@ typedef struct d2vData {
     int aligned_width;
 
     bool format_set;
+
+    ~d2vData();
 } d2vData;
 
 void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, const VSAPI *vsapi);

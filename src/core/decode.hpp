@@ -51,10 +51,10 @@ typedef struct decodecontext {
     unsigned int orig_file;
     unsigned int cur_file;
     uint64_t orig_file_offset;
+    ~decodecontext();
 } decodecontext;
 
 decodecontext *decodeinit(d2vcontext *dctx, int threads, string& err);
-void decodefreep(decodecontext **ctx);
 int decodeframe(int frame, d2vcontext *ctx, decodecontext *dctx, AVFrame *out, string& err);
 
 #endif

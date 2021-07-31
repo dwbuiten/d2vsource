@@ -42,12 +42,7 @@ static const VSFrameRef *VS_CC rffGetFrame(int n, int activationReason, void **i
                                     VSFrameContext *frameCtx, VSCore *core, const VSAPI *vsapi)
 {
     const rffData *d = (const rffData *) *instanceData;
-    const VSFrameRef *st, *sb;
     VSFrameRef *f;
-    int top, bottom;
-    int fieldbased;
-    int i;
-    bool samefields;
 
     /* What frames to use for fields. */
     const rffField *top_field = &d->fields[n * 2];
@@ -55,10 +50,10 @@ static const VSFrameRef *VS_CC rffGetFrame(int n, int activationReason, void **i
     if (top_field->type == Bottom)
         std::swap(top_field, bottom_field);
 
-    top    = top_field->frame;
-    bottom = bottom_field->frame;
+    int top    = top_field->frame;
+    int bottom = bottom_field->frame;
 
-    samefields = top == bottom;
+    bool samefields = top == bottom;
 
     /* Request out source frames. */
     if (activationReason == arInitial) {
@@ -76,8 +71,8 @@ static const VSFrameRef *VS_CC rffGetFrame(int n, int activationReason, void **i
         return NULL;
 
     /* Source and destination frames. */
-    st = vsapi->getFrameFilter(top, d->node, frameCtx);
-    sb = samefields ? NULL : vsapi->getFrameFilter(bottom, d->node, frameCtx);
+    const VSFrameRef *st = vsapi->getFrameFilter(top, d->node, frameCtx);
+    const VSFrameRef *sb = samefields ? NULL : vsapi->getFrameFilter(bottom, d->node, frameCtx);
 
     /* Copy into VS's buffers. */
     if (samefields) {
@@ -93,7 +88,7 @@ static const VSFrameRef *VS_CC rffGetFrame(int n, int activationReason, void **i
 
         f  = vsapi->newVideoFrame(d->vi.format, d->vi.width, d->vi.height, prop_src, core);
 
-        for (i = 0; i < d->vi.format->numPlanes; i++) {
+        for (int i = 0; i < d->vi.format->numPlanes; i++) {
             dst_stride[i]  = vsapi->getStride(f, i);
             srct_stride[i] = vsapi->getStride(st, i);
             srcb_stride[i] = vsapi->getStride(sb, i);
@@ -118,13 +113,7 @@ static const VSFrameRef *VS_CC rffGetFrame(int n, int activationReason, void **i
         /* Set field order. */
         VSMap *props = vsapi->getFramePropsRW(f);
 
-        // They point to elements of an array, so pointer comparison is fine.
-        if (bottom_field < top_field)
-            fieldbased = 1; // bff
-        else
-            fieldbased = 2; // tff
-
-        vsapi->propSetInt(props, "_FieldBased", fieldbased, paReplace);
+        vsapi->propSetInt(props, "_FieldBased", (bottom_field < top_field) ? 1 /* bff */ : 2 /* tff */, paReplace);
     }
 
     vsapi->freeFrame(st);
@@ -138,27 +127,20 @@ static void VS_CC rffFree(void *instanceData, VSCore *core, const VSAPI *vsapi)
 {
     rffData *d = (rffData *) instanceData;
     vsapi->freeNode(d->node);
-    d2vfreep(&d->d2v);
     delete d;
 }
 
 void VS_CC rffCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, const VSAPI *vsapi)
 {
-    rffData *data;
     string msg;
 
     /* Allocate our private data. */
-    data = new(nothrow) rffData;
-    if (!data) {
-        vsapi->setError(out, "Cannot allocate private data.");
-        return;
-    }
+    unique_ptr<rffData> data(new rffData{});
 
     /* Parse the D2V to get flags. */
-    data->d2v = d2vparse(vsapi->propGetData(in, "d2v", 0, 0), msg);
+    data->d2v.reset(d2vparse(vsapi->propGetData(in, "d2v", 0, 0), msg));
     if (!data->d2v) {
         vsapi->setError(out, msg.c_str());
-        delete data;
         return;
     }
 
@@ -224,5 +206,5 @@ void VS_CC rffCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
 
     data->vi.numFrames = (int)data->fields.size() / 2;
 
-    vsapi->createFilter(in, out, "applyrff", rffInit, rffGetFrame, rffFree, fmParallel, 0, data, core);
+    vsapi->createFilter(in, out, "applyrff", rffInit, rffGetFrame, rffFree, fmParallel, 0, data.release(), core);
 }
