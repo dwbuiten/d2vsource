@@ -19,7 +19,14 @@ libd2vsource_la_SOURCES = src/core/compat.cpp \
 						  src/vs/d2vsource.hpp \
 						  src/vs/directrender.cpp \
 						  src/vs/directrender.hpp \
-						  src/vs/vapoursynth.cpp
+						  src/vs/vapoursynth.cpp \
+						  src/vs4/applyrff4.cpp \
+						  src/vs4/applyrff4.hpp \
+						  src/vs4/d2vsource4.cpp \
+						  src/vs4/d2vsource4.hpp \
+						  src/vs4/directrender4.cpp \
+						  src/vs4/directrender4.hpp \
+						  src/vs4/vapoursynth4.cpp
 
 libd2vsource_la_LDFLAGS = -no-undefined -avoid-version $(PLUGINLDFLAGS)
 
