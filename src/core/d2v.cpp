@@ -61,7 +61,7 @@ d2vcontext *d2vparse(const char *filename, string& err)
 {
     string line;
 
-    std::unique_ptr<d2vcontext> ret(new d2vcontext{});
+    std::unique_ptr<d2vcontext> ret(new d2vcontext());
 
     ret->stream_type   = UNSET;
     ret->ts_pid        = -1;

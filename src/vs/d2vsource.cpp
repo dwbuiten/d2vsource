@@ -157,7 +157,7 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
     }
 
     /* Allocate our private data. */
-    std::unique_ptr<d2vData> data(new d2vData{});
+    std::unique_ptr<d2vData> data(new d2vData());
 
     data->d2v.reset(d2vparse(vsapi->propGetData(in, "input", 0, 0), msg));
     if (!data->d2v) {

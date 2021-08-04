@@ -135,7 +135,7 @@ void VS_CC rffCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
     string msg;
 
     /* Allocate our private data. */
-    unique_ptr<rffData> data(new rffData{});
+    unique_ptr<rffData> data(new rffData());
 
     /* Parse the D2V to get flags. */
     data->d2v.reset(d2vparse(vsapi->propGetData(in, "d2v", 0, 0), msg));

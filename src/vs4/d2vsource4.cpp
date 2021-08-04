@@ -174,7 +174,7 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
     }
 
     /* Allocate our private data. */
-    std::unique_ptr<d2vData> data(new d2vData{});
+    std::unique_ptr<d2vData> data(new d2vData());
 
     data->last_decoded = -1;
 

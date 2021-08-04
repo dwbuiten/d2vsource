@@ -144,7 +144,7 @@ decodecontext::~decodecontext()
 /* Initialize everything we can with regards to decoding */
 decodecontext *decodeinit(d2vcontext *dctx, int threads, string& err)
 {
-    std::unique_ptr<decodecontext> ret(new decodecontext{});
+    std::unique_ptr<decodecontext> ret(new decodecontext());
 
     /* Set our stream index to -1 (uninitialized). */
     ret->stream_index = -1;
