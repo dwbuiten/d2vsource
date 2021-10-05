@@ -32,6 +32,7 @@
 
 #include "compat.hpp"
 #include "d2v.hpp"
+#include <memory>
 #include "gop.hpp"
 
 #ifdef _WIN32

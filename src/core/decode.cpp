@@ -32,6 +32,7 @@ extern "C" {
 #include <cstdio>
 
 #include "compat.hpp"
+#include <memory>
 #include "d2v.hpp"
 #include "decode.hpp"
 #include "gop.hpp"
