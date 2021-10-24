@@ -247,8 +247,8 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
     }
 
     VSNode *snode = vsapi->createVideoFilter2("d2vsource", &data->vi, d2vGetFrame, d2vFree, fmUnordered, nullptr, 0, data.get(), core);
-    data.release();
     data->linear_threshold = vsapi->setLinearFilter(snode);
+    data.release();
 
     bool rff = !!vsapi->mapGetInt(in, "rff", 0, &err);
     if (err)
