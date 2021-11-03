@@ -94,15 +94,6 @@ static const VSFrame *VS_CC d2vGetVSFrame(int n, d2vData *d,
     vsapi->mapSetFloat(props, "_AbsoluteTime",
         (static_cast<double>(d->d2v->fps_den) * n) / static_cast<double>(d->d2v->fps_num), maReplace);
 
-    /*
-     * YUVRGB_Scale describes the output range.
-     * _ColorRange describes the input range.
-     */
-    if (d->d2v->yuvrgb_scale == PC)
-        vsapi->mapSetInt(props, "_ColorRange", 1, maReplace);
-    else if (d->d2v->yuvrgb_scale == TV)
-        vsapi->mapSetInt(props, "_ColorRange", 0, maReplace);
-
     switch (d->frame->pict_type) {
     case AV_PICTURE_TYPE_I:
         vsapi->mapSetData(props, "_PictType", "I", 1, dtUtf8, maReplace);
