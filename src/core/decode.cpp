@@ -117,7 +117,7 @@ static int read_packet(void *opaque, uint8_t *buf, int size)
         ret += fread(buf + ret, 1, size - ret, ctx->files[ctx->cur_file]);
     }
 
-    return ((int) ret);
+    return ret == 0 ? AVERROR_EOF : static_cast<int>(ret);
 }
 
 /* Conditionally free all memebers of decodecontext. */
