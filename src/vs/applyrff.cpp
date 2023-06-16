@@ -60,8 +60,8 @@ static const VSFrameRef *VS_CC rffGetFrame(int n, int activationReason, void **i
         if (samefields) {
             vsapi->requestFrameFilter(top, d->node, frameCtx);
         } else {
-            vsapi->requestFrameFilter(min(top, bottom), d->node, frameCtx);
-            vsapi->requestFrameFilter(max(top, bottom), d->node, frameCtx);
+            vsapi->requestFrameFilter(std::min(top, bottom), d->node, frameCtx);
+            vsapi->requestFrameFilter(std::max(top, bottom), d->node, frameCtx);
         }
         return NULL;
     }
@@ -132,10 +132,10 @@ static void VS_CC rffFree(void *instanceData, VSCore *core, const VSAPI *vsapi)
 
 void VS_CC rffCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, const VSAPI *vsapi)
 {
-    string msg;
+    std::string msg;
 
     /* Allocate our private data. */
-    unique_ptr<rffData> data(new rffData());
+    std::unique_ptr<rffData> data(new rffData());
 
     /* Parse the D2V to get flags. */
     data->d2v.reset(d2vparse(vsapi->propGetData(in, "d2v", 0, 0), msg));

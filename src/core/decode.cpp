@@ -41,8 +41,6 @@ extern "C" {
 #include <windows.h>
 #endif
 
-using namespace std;
-
 /*
  * AVIO seek function to handle GOP offsets and multi-file support
  * in libavformat without it knowing about it.
@@ -92,7 +90,7 @@ static int64_t file_seek(void *opaque, int64_t offset, int whence)
     }
     default:
         /* Shouldn't need to support anything else for our use case. */
-        cout << "Unsupported seek!" << endl;
+        std::cout << "Unsupported seek!" << std::endl;
         return -1;
     }
 }
@@ -143,7 +141,7 @@ decodecontext::~decodecontext()
 }
 
 /* Initialize everything we can with regards to decoding */
-decodecontext *decodeinit(d2vcontext *dctx, int threads, string& err)
+decodecontext *decodeinit(d2vcontext *dctx, int threads, std::string& err)
 {
     std::unique_ptr<decodecontext> ret(new decodecontext());
 
@@ -246,7 +244,7 @@ decodecontext *decodeinit(d2vcontext *dctx, int threads, string& err)
     return ret.release();
 }
 
-int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *out, string& err)
+int decodeframe(int frame_num, d2vcontext *ctx, decodecontext *dctx, AVFrame *out, std::string& err)
 {
     bool next = true;
 

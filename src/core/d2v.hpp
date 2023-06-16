@@ -34,8 +34,6 @@ extern "C" {
 
 #define D2V_VERSION "16"
 
-using namespace std;
-
 enum streamtype {
     UNSET      = -1,
     ELEMENTARY = 0,
@@ -81,7 +79,7 @@ typedef struct location {
 
 typedef struct d2vcontext {
     int num_files;
-    vector<string> files;
+    std::vector<std::string> files;
 
     enum streamtype stream_type;
     int ts_pid;
@@ -94,10 +92,10 @@ typedef struct d2vcontext {
     int fps_den;
     location loc;
 
-    vector<frame> frames;
-    vector<gop> gops;
+    std::vector<frame> frames;
+    std::vector<gop> gops;
 } d2vcontext;
 
-d2vcontext *d2vparse(const char *filename, string& err);
+d2vcontext *d2vparse(const char *filename, std::string& err);
 
 #endif

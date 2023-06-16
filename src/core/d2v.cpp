@@ -39,12 +39,10 @@
 #include <windows.h>
 #endif
 
-using namespace std;
-
-static string d2vgetpath(const char *d2v_path, const string& file)
+static std::string d2vgetpath(const char *d2v_path, const std::string& file)
 {
-    string path;
-    string d2v       = d2v_path;
+    std::string path;
+    std::string d2v       = d2v_path;
     size_t delim_pos = d2v.rfind(PATH_DELIM) + 1;
 
     if ((file.substr(0, 1) == "/" || file.substr(1, 1) == ":") || (d2v.substr(0, 1) != "/" && d2v.substr(1, 1) != ":")) {
@@ -58,9 +56,9 @@ static string d2vgetpath(const char *d2v_path, const string& file)
 }
 
 /* Parse the entire D2V index and build the GOP and frame lists. */
-d2vcontext *d2vparse(const char *filename, string& err)
+d2vcontext *d2vparse(const char *filename, std::string& err)
 {
-    string line;
+    std::string line;
 
     std::unique_ptr<d2vcontext> ret(new d2vcontext());
 
@@ -128,8 +126,8 @@ d2vcontext *d2vparse(const char *filename, string& err)
     d2vgetline(input.get(), line);
     while(line.length()) {
         size_t mid = line.find("=");
-        string l   = line.substr(0, mid);
-        string r   = line.substr(mid + 1, line.length() - 1);
+        std::string l   = line.substr(0, mid);
+        std::string r   = line.substr(mid + 1, line.length() - 1);
 
         if (l == "Stream_Type") {
             int type = atoi(r.c_str());
@@ -202,23 +200,23 @@ d2vcontext *d2vparse(const char *filename, string& err)
     int i = 0;
     d2vgetline(input.get(), line);
     while(line.length()) {
-        istringstream ss(line);
+        std::istringstream ss(line);
         gop cur_gop = {};
 
-        ss >> hex >> cur_gop.info;
-        ss >> dec >> cur_gop.matrix;
-        ss >> dec >> cur_gop.file;
-        ss >> dec >> cur_gop.pos;
-        ss >> dec >> cur_gop.skip;
-        ss >> dec >> cur_gop.vob;
-        ss >> dec >> cur_gop.cell;
+        ss >> std::hex >> cur_gop.info;
+        ss >> std::dec >> cur_gop.matrix;
+        ss >> std::dec >> cur_gop.file;
+        ss >> std::dec >> cur_gop.pos;
+        ss >> std::dec >> cur_gop.skip;
+        ss >> std::dec >> cur_gop.vob;
+        ss >> std::dec >> cur_gop.cell;
 
         int offset = 0;
         while(!ss.eof()) {
             uint16_t flags;
             frame f;
 
-            ss >> hex >> flags;
+            ss >> std::hex >> flags;
 
             /*
              * We have to use a 16-bit int to force the stringstream to

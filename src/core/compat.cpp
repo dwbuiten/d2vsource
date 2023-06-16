@@ -25,9 +25,7 @@
 
 #include "compat.hpp"
 
-using namespace std;
-
-void d2vgetline(FILE *f, string& str)
+void d2vgetline(FILE *f, std::string& str)
 {
     str.clear();
 

@@ -41,8 +41,8 @@ typedef struct rffField {
 } rffField;
 
 typedef struct rffData {
-    unique_ptr<d2vcontext> d2v;
-    vector<rffField> fields; // Output fields, in the order they are to be displayed.
+    std::unique_ptr<d2vcontext> d2v;
+    std::vector<rffField> fields; // Output fields, in the order they are to be displayed.
 
     VSVideoInfo vi;
     VSNodeRef *node;
