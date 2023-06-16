@@ -33,8 +33,8 @@
 namespace vs4 {
 
 typedef struct d2vData {
-    unique_ptr<d2vcontext> d2v;
-    unique_ptr<decodecontext> dec;
+    std::unique_ptr<d2vcontext> d2v;
+    std::unique_ptr<decodecontext> dec;
     AVFrame *frame;
     VSVideoInfo vi;
     VSCore *core;

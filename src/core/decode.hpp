@@ -31,8 +31,8 @@ extern "C" {
 #include <cstdint>
 
 typedef struct decodecontext {
-    vector<FILE *> files;
-    vector<int64_t> file_sizes;
+    std::vector<FILE *> files;
+    std::vector<int64_t> file_sizes;
 
     AVCodecContext *avctx;
     AVFormatContext *fctx;
@@ -54,7 +54,7 @@ typedef struct decodecontext {
     ~decodecontext();
 } decodecontext;
 
-decodecontext *decodeinit(d2vcontext *dctx, int threads, string& err);
-int decodeframe(int frame, d2vcontext *ctx, decodecontext *dctx, AVFrame *out, string& err);
+decodecontext *decodeinit(d2vcontext *dctx, int threads, std::string& err);
+int decodeframe(int frame, d2vcontext *ctx, decodecontext *dctx, AVFrame *out, std::string& err);
 
 #endif

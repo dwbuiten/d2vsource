@@ -49,7 +49,7 @@ static const VSFrameRef *VS_CC d2vGetFrame(int n, int activationReason, void **i
 {
     d2vData *d = (d2vData *) *instanceData;
     VSFrameRef *f;
-    string msg;
+    std::string msg;
 
     /* Unreference the previously decoded frame. */
     av_frame_unref(d->frame);
@@ -134,7 +134,7 @@ static void VS_CC d2vFree(void *instanceData, VSCore *core, const VSAPI *vsapi)
 
 void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, const VSAPI *vsapi)
 {
-    string msg;
+    std::string msg;
     int err;
 
     /* Need to get thread info before anything to pass to decodeinit(). */

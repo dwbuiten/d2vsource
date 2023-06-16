@@ -36,8 +36,6 @@
 #define FRAME_FLAG_PROGRESSIVE 0x40
 #define FRAME_FLAG_DECODABLE_WITHOUT_PREVIOUS_GOP 0x80
 
-using namespace std;
-
 typedef struct frame {
     int gop;
     int offset;
@@ -51,7 +49,7 @@ typedef struct gop {
     int skip;
     int vob;
     int cell;
-    vector<uint8_t> flags;
+    std::vector<uint8_t> flags;
 } gop;
 
 #endif
