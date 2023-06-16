@@ -247,20 +247,14 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
 
     if (rff) {
         VSPlugin *d2vPlugin = vsapi->getPluginByID("com.sources.d2vsource", core);
-        VSPlugin *corePlugin = vsapi->getPluginByID("com.vapoursynth.std", core);
         VSMap *args = vsapi->createMap();
 
         vsapi->mapConsumeNode(args, "clip", snode, maReplace);
 
-        VSMap *ret    = vsapi->invoke(corePlugin, "Cache", args);
-        VSNode *middle = vsapi->mapGetNode(ret, "clip", 0, NULL);
-        vsapi->freeMap(ret);
-
-        vsapi->mapConsumeNode(args, "clip", middle, maReplace);
         vsapi->mapSetData(args, "d2v", vsapi->mapGetData(in, "input", 0, NULL),
                            vsapi->mapGetDataSize(in, "input", 0, NULL), dtUtf8,maReplace);
 
-        ret = vsapi->invoke(d2vPlugin, "ApplyRFF", args);
+        VSMap *ret = vsapi->invoke(d2vPlugin, "ApplyRFF", args);
         vsapi->freeMap(args);
 
         const char *error = vsapi->mapGetError(ret);
