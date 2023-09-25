@@ -30,6 +30,7 @@
 #include "d2vsource4.hpp"
 #include "decode.hpp"
 #include "directrender4.hpp"
+#include "applyrff4.hpp"
 
 namespace vs4 {
 
@@ -246,28 +247,15 @@ void VS_CC d2vCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
         rff = true;
 
     if (rff) {
-        VSPlugin *d2vPlugin = vsapi->getPluginByID("com.sources.d2vsource", core);
-        VSMap *args = vsapi->createMap();
+        VSNode *rffnode = rffCreate(snode, vsapi->mapGetData(in, "input", 0, 0), core, vsapi);
+        vsapi->freeNode(snode);
 
-        vsapi->mapConsumeNode(args, "clip", snode, maReplace);
-
-        vsapi->mapSetData(args, "d2v", vsapi->mapGetData(in, "input", 0, NULL),
-                           vsapi->mapGetDataSize(in, "input", 0, NULL), dtUtf8,maReplace);
-
-        VSMap *ret = vsapi->invoke(d2vPlugin, "ApplyRFF", args);
-        vsapi->freeMap(args);
-
-        const char *error = vsapi->mapGetError(ret);
-        if (error) {
-            vsapi->mapSetError(out, error);
-            vsapi->freeMap(ret);
+        if (!rffnode) {
+            vsapi->mapSetError(out, "ApplyRFF: failed to parse d2v");
             return;
         }
 
-        VSNode *after = vsapi->mapGetNode(ret, "clip", 0, NULL);
-
-        vsapi->mapConsumeNode(out, "clip", after, maReplace);
-        vsapi->freeMap(ret);
+        vsapi->mapConsumeNode(out, "clip", rffnode, maReplace);
     } else {
         vsapi->mapConsumeNode(out, "clip", snode, maReplace);
     }

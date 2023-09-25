@@ -126,7 +126,7 @@ static void VS_CC rffFree(void *instanceData, VSCore *core, const VSAPI *vsapi)
     delete d;
 }
 
-void VS_CC rffCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, const VSAPI *vsapi)
+VSNode *rffCreate(VSNode *clip, const char *input, VSCore *core, const VSAPI *vsapi)
 {
     std::string msg;
 
@@ -134,14 +134,13 @@ void VS_CC rffCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
     std::unique_ptr<rffData> data(new rffData());
 
     /* Parse the D2V to get flags. */
-    data->d2v.reset(d2vparse(vsapi->mapGetData(in, "d2v", 0, 0), msg));
+    data->d2v.reset(d2vparse(input, msg));
     if (!data->d2v) {
-        vsapi->mapSetError(out, msg.c_str());
-        return;
+        return NULL;
     }
 
     /* Get our frame info and copy it, so we can modify it after. */
-    data->node = vsapi->mapGetNode(in, "clip", 0, 0);
+    data->node = vsapi->AddNodeRef(clip);
     data->vi   = *vsapi->getVideoInfo(data->node);
 
     /*
@@ -203,8 +202,9 @@ void VS_CC rffCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, 
     data->vi.numFrames = (int)data->fields.size() / 2;
 
     VSFilterDependency deps[] = {data->node, rpGeneral};
-    vsapi->createVideoFilter(out, "applyrff", &data->vi, rffGetFrame, rffFree, fmParallel, deps, 1, data.get(), core);
+    VSNode *out = vsapi->createVideoFilter2(out, "applyrff", &data->vi, rffGetFrame, rffFree, fmParallel, deps, 1, data.get(), core);
     data.release();
+    return out;
 }
 
 }

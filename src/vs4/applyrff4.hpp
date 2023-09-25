@@ -50,7 +50,7 @@ typedef struct rffData {
     VSNode *node;
 } rffData;
 
-void VS_CC rffCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, const VSAPI *vsapi);
+VSNode *rffCreate(VSNode *clip, const char *input, VSCore *core, const VSAPI *vsapi);
 
 }
 

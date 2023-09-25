@@ -26,7 +26,6 @@
 #include <VapourSynth4.h>
 #include <VSHelper4.h>
 
-#include "applyrff4.hpp"
 #include "d2vsource4.hpp"
 
 using namespace vs4;
@@ -35,5 +34,4 @@ VS_EXTERNAL_API(void) VapourSynthPluginInit2(VSPlugin *plugin, const VSPLUGINAPI
     vspapi->configPlugin("com.sources.d2vsource", "d2v", "D2V Source", VS_MAKE_VERSION(1, 1), VAPOURSYNTH_API_VERSION, 0, plugin);
 
     vspapi->registerFunction("Source", "input:data;threads:int:opt;nocrop:int:opt;rff:int:opt;", "clip:vnode;", d2vCreate, 0, plugin);
-    vspapi->registerFunction("ApplyRFF", "clip:vnode;d2v:data;", "clip:vnode;", rffCreate, 0, plugin);
 }
