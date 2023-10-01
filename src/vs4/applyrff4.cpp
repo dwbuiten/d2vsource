@@ -140,7 +140,7 @@ VSNode *rffCreate(VSNode *clip, const char *input, VSCore *core, const VSAPI *vs
     }
 
     /* Get our frame info and copy it, so we can modify it after. */
-    data->node = vsapi->AddNodeRef(clip);
+    data->node = vsapi->addNodeRef(clip);
     data->vi   = *vsapi->getVideoInfo(data->node);
 
     /*
@@ -202,7 +202,7 @@ VSNode *rffCreate(VSNode *clip, const char *input, VSCore *core, const VSAPI *vs
     data->vi.numFrames = (int)data->fields.size() / 2;
 
     VSFilterDependency deps[] = {data->node, rpGeneral};
-    VSNode *out = vsapi->createVideoFilter2(out, "applyrff", &data->vi, rffGetFrame, rffFree, fmParallel, deps, 1, data.get(), core);
+    VSNode *out = vsapi->createVideoFilter2("ApplyRFF", &data->vi, rffGetFrame, rffFree, fmParallel, deps, 1, data.get(), core);
     data.release();
     return out;
 }
