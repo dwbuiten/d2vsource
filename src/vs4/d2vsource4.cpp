@@ -128,7 +128,7 @@ static const VSFrame *VS_CC d2vGetFrame(int n, int activationReason, void *insta
     if (activationReason == arInitial) {
         if (d->last_decoded < n && d->last_decoded > n - d->linear_threshold) {
             for (int i = d->last_decoded + 1; i < n; i++) {
-                const VSFrame *f = d2vGetVSFrame(n, d, frameCtx, core, vsapi);
+                const VSFrame *f = d2vGetVSFrame(i, d, frameCtx, core, vsapi);
                 if (f) {
                     vsapi->cacheFrame(f, i, frameCtx);
                     vsapi->freeFrame(f);
@@ -138,6 +138,7 @@ static const VSFrame *VS_CC d2vGetFrame(int n, int activationReason, void *insta
             }
         }
 
+        d->last_decoded = n;
         return d2vGetVSFrame(n, d, frameCtx, core, vsapi);
     }
 
