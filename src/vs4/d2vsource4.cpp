@@ -138,6 +138,7 @@ static const VSFrame *VS_CC d2vGetFrame(int n, int activationReason, void *insta
             }
         }
 
+        d->last_decoded = n;
         return d2vGetVSFrame(n, d, frameCtx, core, vsapi);
     }
 
