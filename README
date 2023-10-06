@@ -65,13 +65,9 @@ At some point I will add a proper build system.
 
 On Windows (Visual Studio):
 
-    This assumes that you have the proper dependency paths in %INCLUDE% and %LIB%,
-    and that you have built FFmpeg with Visual Studio as well.
+    Install FFmpeg using vcpkg and then use the included Visual Studio solution.
 
-    cl /c /O2 /MT /EHsc /Icore /Ivs src/core/d2v.cpp src/core/compat.cpp src/core/decode.cpp src/vs/directrender.cpp src/vs/applyrff.cpp src/vs/d2vsource.cpp src/vs/vapoursynth.cpp
-    link /dll /out:d2vsource.dll directrender.obj applyrff.obj d2vsource.obj d2v.obj compat.obj decode.obj vapoursynth.obj libavutil.a libavformat.a libavcodec.a advapi32.lib ws2_32.lib
-
-    Please note that MinGW-build FFmpeg will be faster than one build with Visual
+    Please note that MinGW-built FFmpeg will be faster than one build with Visual
     Studio, due to its use of inline assembly. Also note that only MinGW-w64 is
     supported.
 
