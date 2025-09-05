@@ -135,7 +135,7 @@ decodecontext::~decodecontext()
         fclose(files[i]);
 
     if (avctx) {
-        avcodec_close(avctx);
+        avcodec_free_context(&avctx);
         av_freep(&avctx);
     }
 }
