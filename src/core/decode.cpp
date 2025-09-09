@@ -136,7 +136,6 @@ decodecontext::~decodecontext()
 
     if (avctx) {
         avcodec_free_context(&avctx);
-        av_freep(&avctx);
     }
 }
 
