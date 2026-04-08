@@ -3,7 +3,7 @@ requires = ["meson-python", "vapoursynth"]
 build-backend = "mesonpy"
 
 [project]
-name = "vapoursynth-subtext"
+name = "vapoursynth-d2vsource"
 description = "D2V source filter for VapourSynth"
 readme = "README.md"
 requires-python = ">=3.12"
