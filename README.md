@@ -58,10 +58,8 @@ Known Limitations & Bugs
 * Probably more I'm forgetting!
 
 
-How to Build
-------------
-
-At some point I will add a proper build system.
+How to Build for Development
+----------------------------
 
 On Windows (Visual Studio):
 
@@ -70,10 +68,3 @@ On Windows (Visual Studio):
     Please note that MinGW-built FFmpeg will be faster than one build with Visual
     Studio, due to its use of inline assembly. Also note that only MinGW-w64 is
     supported.
-
-On Linux, Mac OS X, or MinGW:
-
-    ./autogen.sh
-    ./configure
-    make
-    make install

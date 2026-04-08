@@ -5,7 +5,7 @@ build-backend = "mesonpy"
 [project]
 name = "vapoursynth-subtext"
 description = "D2V source filter for VapourSynth"
-readme = "README"
+readme = "README.md"
 requires-python = ">=3.12"
 license = "LGPL-2.1-or-later"
 license-files = ["COPYING"]
