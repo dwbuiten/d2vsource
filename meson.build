@@ -36,6 +36,7 @@ incdir = include_directories(
         'import vapoursynth as vs; print(vs.get_include())',
         check: true,
     ).stdout().strip(),
+    'src/core'
 )
 
 py = import('python').find_installation(pure: false)
