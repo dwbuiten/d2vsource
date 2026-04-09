@@ -39,6 +39,12 @@ incdir = include_directories(
     'src/core'
 )
 
+link_args = []
+
+if meson.get_compiler('cpp').get_linker_id() in ['ld.bfd', 'ld.gold', 'ld.mold']
+    link_args += '-Wl,-Bsymbolic'
+endif
+
 py = import('python').find_installation(pure: false)
 
 shared_module('d2vsource',
@@ -46,6 +52,7 @@ shared_module('d2vsource',
     dependencies : deps,
     gnu_symbol_visibility: 'hidden',
     include_directories: incdir,
+    link_args: link_args,
     install: true,
     install_dir: py.get_install_dir() / 'vapoursynth/plugins',
     name_prefix: '',
